@@ -1,7 +1,7 @@
 # FAU_Dataset
 A Dataset for different facial action units' activation. 
 
-Applications: Character Creator 4 (CC4), Power Automate. 
+Softwares: Character Creator 4 (CC4), Power Automate. 
 
 Total Number of Samples: 940 <br>
 (9 AUs * 5 Intensities levels + 1 AU43 * 1 Intensity level + Original Face w/o AU) * 10 Skin Colors * (1 Male Face + 1 Female Face) = 940
