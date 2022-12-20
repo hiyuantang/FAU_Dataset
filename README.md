@@ -1,5 +1,6 @@
 # FAU_Dataset
 A Dataset for different facial action units' activation. 
+![Screenshot_20221220_095402](https://user-images.githubusercontent.com/24949723/208733705-827a0670-f3d7-4d31-9a87-f66cb483a4e4.png)
 
 Softwares: Character Creator 4 (CC4), Power Automate. 
 
