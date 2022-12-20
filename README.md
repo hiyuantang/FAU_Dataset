@@ -1,6 +1,9 @@
 # FAU_Dataset
 A Dataset of photorealistic faces with different facial action units' activation. 
-![Screenshot_20221220_095402](https://user-images.githubusercontent.com/24949723/208733705-827a0670-f3d7-4d31-9a87-f66cb483a4e4.png)
+![Screenshot_20221220_095402](https://user-images.githubusercontent.com/24949723/208733705-827a0670-f3d7-4d31-9a87-f66cb483a4e4.png) 
+
+A Sample Image (An European Male of Skin Color Scale 4 with AU10 Activated at Maximum) <br>
+![Screenshot_20221220_095745](https://user-images.githubusercontent.com/24949723/208734519-b632191e-9ba3-4a45-86eb-3e4674c35cd7.png)
 
 Softwares: Character Creator 4 (CC4), Power Automate. 
 
