@@ -2,12 +2,12 @@
 A Dataset of photorealistic faces with different facial action units' activation. **Link:** [Google Drive](https://drive.google.com/drive/folders/1wzqoBauX746f9YxpFrmf8TUlUhfb8vDN?usp=sharing)
 ![Screenshot_20221220_095402](https://user-images.githubusercontent.com/24949723/208733705-827a0670-f3d7-4d31-9a87-f66cb483a4e4.png) 
 
-A Sample Image (An European Male of Skin Color Scale 4 with AU10 Activated at its Maximum) <br>
+**A Sample Image:** (An European Male of Skin Color Scale 4 with AU10 Activated at its Maximum) <br>
 ![Screenshot_20221220_095745](https://user-images.githubusercontent.com/24949723/208734519-b632191e-9ba3-4a45-86eb-3e4674c35cd7.png)
 
-Softwares and Websites Used: Character Creator 4 (CC4), Power Automate, https://skintone.google/
+**Softwares and Websites Used:** Character Creator 4 (CC4), Power Automate, https://skintone.google/
 
-Total Number of Samples: 940 <br>
+**Total Number of Samples:** 940 <br>
 (9 AUs * 5 Intensities levels + 1 AU43 * 1 Intensity level + Original Face w/o AU) * 10 Skin Colors * (1 European Male Face + 1 European Female Face) = 940
 
 Only one action unit is activate in each sample while others remaining unactivated. The action units include: <br>
