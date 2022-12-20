@@ -5,7 +5,7 @@ A Dataset of photorealistic faces with different facial action units' activation
 A Sample Image (An European Male of Skin Color Scale 4 with AU10 Activated at Maximum) <br>
 ![Screenshot_20221220_095745](https://user-images.githubusercontent.com/24949723/208734519-b632191e-9ba3-4a45-86eb-3e4674c35cd7.png)
 
-Softwares: Character Creator 4 (CC4), Power Automate. 
+Softwares and Websites Used: Character Creator 4 (CC4), Power Automate, https://skintone.google/
 
 Total Number of Samples: 940 <br>
 (9 AUs * 5 Intensities levels + 1 AU43 * 1 Intensity level + Original Face w/o AU) * 10 Skin Colors * (1 European Male Face + 1 European Female Face) = 940
