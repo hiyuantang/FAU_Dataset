@@ -5,8 +5,8 @@ Applications: Character Creator 4 (CC4), Power Automate.
 
 Total Number of Samples: 940
 
-Only one action unit is activate in each sample while others remaining unactivated. The action units include:
--'AU[-]-[AU's name]: [Corresponding facial morphing options in CC4 with activation power levels]'
+Only one action unit is activate in each sample while others remaining unactivated. The action units include
+-AU[-]-[AU's name]: [Corresponding facial morphing options in CC4 with activation power levels]
 -AU4-Brow Lowerer: 【Brow Drop L/R (30, 60, 90, 120, 150)】
 -AU6-Cheek Raiser: 【Cheek Raise L/R (30, 60, 90, 120, 150)】
 -AU7-Lid Tightener: 【Eye Squint L/R (30, 60, 90, 120, 150)】
