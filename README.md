@@ -11,7 +11,7 @@ A Dataset of photorealistic faces with different facial action units' activation
 **Total Number of Samples:** 940 <br>
 (9 AUs * 5 Intensities levels + 1 AU43 * 1 Intensity level + Original Face w/o AU) * 10 Skin Colors * (1 European Male Face + 1 European Female Face) = 940
 
-Only one action unit is activate in each sample while others remaining unactivated. The action units include: <br>
+Only one action unit is activated in each sample while other AUs remain unactivated. The action units include: <br>
 -AU[-]-[AU's name]: [Corresponding facial morphing options in CC4 with activation power levels] <br>
 -AU4-Brow Lowerer: 【Brow Drop L/R (30, 60, 90, 120, 150)】<br>
 -AU6-Cheek Raiser: 【Cheek Raise L/R (30, 60, 90, 120, 150)】<br>
