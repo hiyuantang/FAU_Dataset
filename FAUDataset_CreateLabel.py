@@ -17,9 +17,12 @@ args = parser.parse_args()
 root = args.root_path
 image_dir = os.path.join(root, 'images')
 label_dir = os.path.join(root, 'labels')
+summary_dir = os.path.join(label_dir, 'summary.txt')
 if os.path.exists(label_dir)==False:
     os.mkdir(label_dir)
 
+count = 0
+summary = {}
 for i in next(os.walk(image_dir))[1]:
     for j in next(os.walk(os.path.join(image_dir, i)))[1]:
         updated_images_dir = os.path.join(image_dir, i)
@@ -74,4 +77,10 @@ for i in next(os.walk(image_dir))[1]:
             target_label_path = os.path.join(updated_label_dir_final, label_file_name)
             with open(target_label_path, 'w') as outfile:
                 outfile.write(json_object)
+            
+            summary[count] = target_label_path
+            count += 1
+with open(summary_dir, 'w') as outfile:
+    json.dump(summary, outfile)
+            
 
