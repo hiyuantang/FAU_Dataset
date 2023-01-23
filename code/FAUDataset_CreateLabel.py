@@ -3,14 +3,15 @@ import os
 import json
 
 #This file will generate the labels for FAU Dataset
+#Once you have the datasets [European_Man] and [European_Woman], create a root directory and unzip the datasets in folder root/images before running the script. 
 #Sample bash command: 
-# python C:\Users\Yuan\OneDrive\Documents\deSaLab\shoulder_pain_detection\FAUDataset_CreateLabel.py -r C:/Users/Yuan/Datasets/FAU
+# python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/FAUDataset_CreateLabel.py -r C:/Users/Yuan/Datasets/FAU
 #Sample label outcome for each image: 
 # {"PSPI": 0.2, "au4": 0.2, "au6": 0.0, "au7": 0.0, "au10": 0.0, "au12": 0.0, "au20": 0.0, "au25": 0.0, "au26": 0.0, "au43": 0.0}
 
 parser = argparse.ArgumentParser(description='FAU Dataset Labeling')
 parser.add_argument('--root_path', '-r', metavar='DIR',
-                    help='path to dataset: C:/Users/Yuan/Datasets/FAU')
+                    help='path to root you have created: C:/Users/Yuan/Datasets/FAU')
 
 args = parser.parse_args()
 
