@@ -17,15 +17,15 @@ from FAUDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
+# sampe bash command: python C:\Users\Yuan\OneDrive\Documents\deSaLab\shoulder_pain_detection\train.py --seed 16 --dataset_root C:/Users/Yuan/Datasets/FAU
+
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
         param.requires_grad = False if feature_extracting else True
 
-
-
 parser = argparse.ArgumentParser(description='FAU Dataset Training')
 parser.add_argument('--seed', default=16, type=int, help='seed for initializing training. ')
-parser.add_argument("--epochs", default=50, type=int, help="number of epochs for training")
+parser.add_argument('--epochs', default=50, type=int, help="number of epochs for training")
 parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
