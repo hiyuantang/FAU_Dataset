@@ -23,6 +23,35 @@ def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
         param.requires_grad = False if feature_extracting else True
 
+def test_model(model, epoch):
+    content = {}
+    model.eval()
+    with torch.no_grad():
+        running_loss_test = 0.0
+        running_pred_label_test = np.empty((0,20))
+            # Iterate over data.
+        for images, labels in test_loader:
+            inputs = images.to(device)
+            labels = labels.to(device)
+            outputs = model(inputs)
+            outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
+            running_pred_label = np.concatenate((running_pred_label_test, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
+        
+        pred_test = running_pred_label[:,0:10]
+        label_test = running_pred_label[:,10:]
+
+        test_mses = ((pred_test - label_test)**2).mean(axis=0)
+        test_maes = (np.abs(pred_test - label_test)).mean(axis=0)
+
+        test_pspi_mse = test_mses[0]
+        test_pspi_mae = test_maes[0]
+        test_loss = running_loss_test / len(test_dataset)
+        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', test_loss, test_pspi_mse, test_pspi_mae))
+        content['mse'+str(epoch)+'_test'] = list(epoch_mses)
+        content['mae'+str(epoch)+'_test'] = list(epoch_maes)
+    return content
+
+
 parser = argparse.ArgumentParser(description='FAU Dataset Training')
 parser.add_argument('--seed', default=16, type=int, help='seed for initializing training. ')
 parser.add_argument('--epochs', default=50, type=int, help="number of epochs for training")
@@ -34,6 +63,8 @@ parser.add_argument('--test_set', '-t', default=[9,10], type=list,
                     help='take in a list of skin color scale')
 parser.add_argument('--dataset_root', default='C:/Users/Yuan/Datasets/FAU', 
                     help='the root path of FAU Dataset')
+parser.add_argument('--save_interval', default=10, type=int, 
+                    help='define the interval of epochs to save model state')
 args = parser.parse_args()
 
 print("PyTorch Version: ",torch.__version__)
@@ -47,10 +78,13 @@ if args.seed is not None:
 image_dir = os.path.join(args.dataset_root, 'images')
 label_dir = os.path.join(args.dataset_root, 'labels')
 
-if not os.path.isdir('./models_sf' + str(args.seed)):
-        os.mkdir('./models_sf' + str(args.seed))
-if not os.path.isdir('./results_sf' + str(args.seed)):
-        os.mkdir('./results_sf' + str(args.seed))
+if not os.path.isdir('./models_r' + str(args.seed)):
+        os.mkdir('./models_r' + str(args.seed))
+if not os.path.isdir('./results_r' + str(args.seed)):
+        os.mkdir('./results_r' + str(args.seed))
+
+#checkpoints_path = os.path.join('./models_r', '')
+results_path = os.path.join('./results_r', 'results.txt')
 
 num_classes = 10
 batch_size = args.train_batch_size
@@ -179,10 +213,7 @@ criterion = nn.MSELoss(reduction='none')
 
 # train model
 since = time.time()
-train_loss_history = []
-
-best_mae = [0, np.Infinity]
-best_mse = [0, np.Infinity]
+loss_history = {}
 
 for epoch in range(num_epochs):
     print('Epoch {}/{}'.format(epoch, num_epochs-1))
@@ -204,27 +235,23 @@ for epoch in range(num_epochs):
         # Get model outputs and calculate loss
         outputs = model(inputs)
         #labels/tensor([16.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.]
-        #loss1 = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
-        loss_batch = criterion(outputs, labels/torch.FloatTensor([4] + [1]*9).to(device))
-        #print(loss_batch.shape) --> torch.Size([32, 10])
-        loss_batch = loss_batch.sum(0)
-        #print(loss_batch.shape) --> torch.Size([10])
-        loss = loss_batch.mean()
+        loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
+        loss = loss_batch.mean() * batch_size
         loss.backward()
         optimizer.step()
 
-        # statistics
         running_loss += loss.item()
 
-        #outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
-        outputs = outputs * torch.FloatTensor([4] + [1]*9).to(device)
+        outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
         running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
-    
-    pred_test = running_pred_label[:,0:10]
-    label_test = running_pred_label[:,10:]
 
-    epoch_mses = ((pred_test - label_test)**2).mean(axis=0)
-    epoch_maes = (np.abs(pred_test - label_test)).mean(axis=0)
+    pred_train = running_pred_label[:,0:10]
+    label_train = running_pred_label[:,10:]
+
+    epoch_mses = ((pred_train - label_train)**2).mean(axis=0)
+    epoch_maes = (np.abs(pred_train - label_train)).mean(axis=0)
+    loss_history['mse'+str(epoch)] = list(epoch_mses)
+    loss_history['mae'+str(epoch)] = list(epoch_maes)
     # epoch_mse = epoch_mses.mean()
     # epoch_mae = epoch_maes.mean()
 
@@ -233,14 +260,14 @@ for epoch in range(num_epochs):
     epoch_loss = running_loss / len(train_dataset)
     print('{} loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, epoch_pspi_mse, epoch_pspi_mae))
 
+    # add test result
+    test_result = test_model(model, epoch)
+    loss_history.update(test_result)
+
 time_elapsed = time.time() - since
 print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-'''
-print('Best val MAE: {:4f} at epoch {:0f}'.format(best_mae[1], best_mae[0]))
-print('Best val MSE: {:4f} at epoch {:0f}'.format(best_mse[1], best_mse[0]))
-f=open('BestEpoch.txt', "a")
-f.write('\nBest val MAE: {:4f} at epoch {:0f} \n'.format(best_mae[1], best_mae[0]))
-f.write('Best val MSE: {:4f} at epoch {:0f} \n'.format(best_mse[1], best_mse[0]))
-f.close()
-# load best model weights
-model.load_state_dict(best_model_wts)'''
+
+json_object = json.dumps(loss_history)
+
+with open(results_path, 'a') as f:
+    f.write(json_object)
