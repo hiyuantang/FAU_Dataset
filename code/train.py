@@ -17,14 +17,13 @@ from FAUDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
-# sampe bash command: python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/train.py --seed 16 --dataset_root C:/Users/Yuan/Datasets/FAU
+# sampe bash command: C:\Users\Yuan\OneDrive\Documents\GitHub\FAU_Dataset\code>python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/train.py --seed 16 --dataset_root C:/Users/Yuan/Datasets/FAU --resume "C:/Users/Yuan/Downloads/0.pth 
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
         param.requires_grad = False if feature_extracting else True
 
-def test_model(model, epoch):
-    content = {}
+def test_model(model):
     model.eval()
     with torch.no_grad():
         running_loss_test = 0.0
@@ -34,6 +33,11 @@ def test_model(model, epoch):
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
+
+            loss_batch_test = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
+            loss_test = loss_batch_test.mean() * batch_size
+            running_loss_test += loss_test.item()
+
             outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
             running_pred_label = np.concatenate((running_pred_label_test, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
         
@@ -46,10 +50,8 @@ def test_model(model, epoch):
         test_pspi_mse = test_mses[0]
         test_pspi_mae = test_maes[0]
         test_loss = running_loss_test / len(test_dataset)
-        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', test_loss, test_pspi_mse, test_pspi_mae))
-        content['mse'+str(epoch)+'_test'] = list(epoch_mses)
-        content['mae'+str(epoch)+'_test'] = list(epoch_maes)
-    return content
+        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', test_loss, test_pspi_mse, test_pspi_mae)+ '\n')
+    return epoch_mses, epoch_maes
 
 
 parser = argparse.ArgumentParser(description='FAU Dataset Training')
@@ -83,8 +85,9 @@ if not os.path.isdir('./models_r' + str(args.seed)):
 if not os.path.isdir('./results_r' + str(args.seed)):
         os.mkdir('./results_r' + str(args.seed))
 
-#checkpoints_path = os.path.join('./models_r', '')
-results_path = os.path.join('./results_r', 'results.txt')
+results_path = os.path.join('./results_r'+str(args.seed), 'results.txt')
+with open(results_path, 'x') as f:
+    pass
 
 num_classes = 10
 batch_size = args.train_batch_size
@@ -92,7 +95,6 @@ num_epochs = args.epochs
 
 data_transforms = {
         'train': transforms.Compose([
-            # BGR2RGB(),
             transforms.ToPILImage(),
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -101,7 +103,6 @@ data_transforms = {
             #transforms.Normalize([0.3873985 , 0.42637664, 0.53720075], [0.2046528 , 0.19909547, 0.19015081])
         ]),
         'val': transforms.Compose([
-            # BGR2RGB(),
             transforms.ToPILImage(),
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -109,7 +110,6 @@ data_transforms = {
             #transforms.Normalize([0.3873985 , 0.42637664, 0.53720075], [0.2046528 , 0.19909547, 0.19015081])
         ]),
         'test': transforms.Compose([
-            # BGR2RGB(),
             transforms.ToPILImage(),
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -149,16 +149,13 @@ print('Test Sets: '+ str(test_subjects))
 
 # Train the model
 model = VGG_16()
-if args.resume is None:
-    pass
-    #model.load_weights()
-else:
-    model.load_state_dict(torch.load(args.resume))
 set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
 model.fc8 = nn.Linear(num_ftrs, num_classes)
-input_size = 224
-
+if args.resume is None:
+    pass
+else:
+    model.load_state_dict(torch.load(args.resume), strict=False)
 
 train_dataset = FAUDataset(args.dataset_root, subjects = train_subjects, transform=data_transforms['train'])
 test_dataset = FAUDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
@@ -213,7 +210,6 @@ criterion = nn.MSELoss(reduction='none')
 
 # train model
 since = time.time()
-loss_history = {}
 
 for epoch in range(num_epochs):
     print('Epoch {}/{}'.format(epoch, num_epochs-1))
@@ -250,10 +246,6 @@ for epoch in range(num_epochs):
 
     epoch_mses = ((pred_train - label_train)**2).mean(axis=0)
     epoch_maes = (np.abs(pred_train - label_train)).mean(axis=0)
-    loss_history['mse'+str(epoch)] = list(epoch_mses)
-    loss_history['mae'+str(epoch)] = list(epoch_maes)
-    # epoch_mse = epoch_mses.mean()
-    # epoch_mae = epoch_maes.mean()
 
     epoch_pspi_mse = epoch_mses[0]
     epoch_pspi_mae = epoch_maes[0]
@@ -261,13 +253,16 @@ for epoch in range(num_epochs):
     print('{} loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, epoch_pspi_mse, epoch_pspi_mae))
 
     # add test result
-    test_result = test_model(model, epoch)
-    loss_history.update(test_result)
+    test_mses, test_maes = test_model(model)
+
+    with open(results_path, 'a') as f:
+        f.write('train_mses at epoch'+str(epoch)+': '+str(epoch_mses)+'\n')
+        f.write('train_maes at epoch'+str(epoch)+': '+str(epoch_maes)+'\n')
+        f.write('test_mses at epoch'+str(epoch)+': '+str(epoch_mses)+'\n')
+        f.write('test_maes at epoch'+str(epoch)+': '+str(epoch_maes)+'\n')
+    
+    if (epoch+1)%5 == 0:
+        torch.save(model.state_dict(), os.path.join('./models_r' + str(args.seed), 'checkpoint_epoch'+str(epoch)+'.pth'))
 
 time_elapsed = time.time() - since
 print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-
-json_object = json.dumps(loss_history)
-
-with open(results_path, 'a') as f:
-    f.write(json_object)
