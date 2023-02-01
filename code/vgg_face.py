@@ -94,6 +94,50 @@ class VGG_16(nn.Module):
         x = F.relu(self.fc7(x))
         x = self.dropout7(x)
         return self.fc8(x)
+    
+    def forward_thoughts(self, x, cut):
+        x_0 = F.relu(self.conv_1_1(x))
+        x_0 = F.relu(self.conv_1_2(x_0))
+        x_0 = F.max_pool2d(x_0, 2, 2)
+
+        x_1 = F.relu(self.conv_2_1(x_0))
+        x_1 = F.relu(self.conv_2_2(x_1))
+        x_1 = F.max_pool2d(x_1, 2, 2)
+
+        x_2 = F.relu(self.conv_3_1(x_1))
+        x_2 = F.relu(self.conv_3_2(x_2))
+        x_2 = F.relu(self.conv_3_3(x_2))
+        x_2 = F.max_pool2d(x_2, 2, 2)
+
+        x_3 = F.relu(self.conv_4_1(x_2))
+        x_3 = F.relu(self.conv_4_2(x_3))
+        x_3 = F.relu(self.conv_4_3(x_3))
+        x_3 = F.max_pool2d(x_3, 2, 2)
+
+        x_4 = F.relu(self.conv_5_1(x_3))
+        x_4 = F.relu(self.conv_5_2(x_4))
+        x_4 = F.relu(self.conv_5_3(x_4))
+        x_4 = F.max_pool2d(x_4, 2, 2)
+
+        x_5 = x_4.view(x_4.size(0), -1)
+        x_5 = F.relu(self.fc6(x_5))
+        x_5 = self.dropout6(x_5)
+        x_5 = F.relu(self.fc7(x_5))
+        x_5 = self.dropout7(x_5)
+        x_5 = self.fc8(x_5)
+        
+        if cut == 0:
+            return x_0
+        elif cut == 1:
+            return x_1
+        elif cut == 2:
+            return x_2
+        elif cut == 3:
+            return x_3
+        elif cut == 4:
+            return x_4
+        elif cut == 5:
+            return x_5
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ from FAUDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
-# sampe bash command: C:\Users\Yuan\OneDrive\Documents\GitHub\FAU_Dataset\code>python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/train.py --seed 16 --dataset_root C:/Users/Yuan/Datasets/FAU --resume "C:/Users/Yuan/Downloads/0.pth 
+# sampe bash command: python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/train.py --seed 16 --dataset_root C:/Users/Yuan/Datasets/FAU --resume "C:/Users/Yuan/Downloads/0.pth 
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -26,33 +26,32 @@ def set_parameter_requires_grad(model, feature_extracting):
 def test_model(model):
     model.eval()
     with torch.no_grad():
-        running_loss_test = 0.0
-        running_pred_label_test = np.empty((0,20))
+        running_loss = 0.0
+        running_pred_label = np.empty((0,20))
             # Iterate over data.
         for images, labels in test_loader:
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
 
-            loss_batch_test = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
-            loss_test = loss_batch_test.mean() * batch_size
-            running_loss_test += loss_test.item()
+            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
+            loss_batch_mean = loss_batch.mean() * batch_size
+            running_loss += loss_batch_mean.item()
 
             outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
-            running_pred_label = np.concatenate((running_pred_label_test, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
+            running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
         
         pred_test = running_pred_label[:,0:10]
         label_test = running_pred_label[:,10:]
 
-        test_mses = ((pred_test - label_test)**2).mean(axis=0)
-        test_maes = (np.abs(pred_test - label_test)).mean(axis=0)
+        mses = ((pred_test - label_test)**2).mean(axis=0)
+        maes = (np.abs(pred_test - label_test)).mean(axis=0)
 
-        test_pspi_mse = test_mses[0]
-        test_pspi_mae = test_maes[0]
-        test_loss = running_loss_test / len(test_dataset)
-        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', test_loss, test_pspi_mse, test_pspi_mae)+ '\n')
-    return epoch_mses, epoch_maes
-
+        pspi_mse = mses[0]
+        pspi_mae = maes[0]
+        loss = running_loss / len(test_dataset)
+        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', loss, pspi_mse, pspi_mae)+ '\n')
+    return loss, mses, maes
 
 parser = argparse.ArgumentParser(description='FAU Dataset Training')
 parser.add_argument('--seed', default=16, type=int, help='seed for initializing training. ')
@@ -232,11 +231,11 @@ for epoch in range(num_epochs):
         outputs = model(inputs)
         #labels/tensor([16.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.]
         loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
-        loss = loss_batch.mean() * batch_size
-        loss.backward()
+        loss_batch_mean = loss_batch.mean() * batch_size
+        loss_batch_mean.backward()
         optimizer.step()
 
-        running_loss += loss.item()
+        running_loss += loss_batch_mean.item()
 
         outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
         running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
@@ -253,13 +252,16 @@ for epoch in range(num_epochs):
     print('{} loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, epoch_pspi_mse, epoch_pspi_mae))
 
     # add test result
-    test_mses, test_maes = test_model(model)
+    test_loss, test_mses, test_maes = test_model(model)
 
     with open(results_path, 'a') as f:
+        f.write('train_loss at epoch'+str(epoch)+': '+str(epoch_loss)+'\n')
         f.write('train_mses at epoch'+str(epoch)+': '+str(epoch_mses)+'\n')
         f.write('train_maes at epoch'+str(epoch)+': '+str(epoch_maes)+'\n')
-        f.write('test_mses at epoch'+str(epoch)+': '+str(epoch_mses)+'\n')
-        f.write('test_maes at epoch'+str(epoch)+': '+str(epoch_maes)+'\n')
+        f.write('test_loss at epoch'+str(epoch)+': '+str(test_loss)+'\n')
+        f.write('test_mses at epoch'+str(epoch)+': '+str(test_mses)+'\n')
+        f.write('test_maes at epoch'+str(epoch)+': '+str(test_maes)+'\n')
+        f.write('\n')
     
     if (epoch+1)%5 == 0:
         torch.save(model.state_dict(), os.path.join('./models_r' + str(args.seed), 'checkpoint_epoch'+str(epoch)+'.pth'))
