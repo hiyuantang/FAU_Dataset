@@ -17,7 +17,7 @@ from FAUDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
-# sampe bash command: python C:/Users/Yuan/OneDrive/Documents/GitHub/FAU_Dataset/code/train.py --seed 66 --dataset_root C:/Users/Yuan/Datasets/FAU --resume "C:/Users/Yuan/Downloads/checkpoint_epoch_init.pth 
+# sampe bash command: python D:\GitHub\FAU_Dataset\code\train.py --seed 66 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -62,7 +62,7 @@ parser.add_argument('--resume', '-r', default=None, type=str,
                     help='transfer training by defining the path of stored weights')
 parser.add_argument('--test_set', '-t', default=[6, 7, 8, 9, 10], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--dataset_root', default='C:/Users/Yuan/Datasets/FAU', 
+parser.add_argument('--dataset_root', default='D:/Datasets/FAU', 
                     help='the root path of FAU Dataset')
 parser.add_argument('--save_interval', default=10, type=int, 
                     help='define the interval of epochs to save model state')
