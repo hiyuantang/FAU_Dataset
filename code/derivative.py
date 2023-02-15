@@ -42,3 +42,9 @@ set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
 model.fc8 = nn.Linear(num_ftrs, num_classes)
 model.load_state_dict(torch.load(checkpoint_path), strict=False)
+
+input = 0
+output = model(input)
+
+output.backward(retain_graph=True)
+derivative = input.grad
