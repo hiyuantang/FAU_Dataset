@@ -10,10 +10,14 @@ import matplotlib.pyplot as plt
 from vgg_face import *
 from FAUDataset import *
 
+# sample running command: 
+# python derivative.py --gender man --seed 66 --activation 5 --au 4
+
 parser = argparse.ArgumentParser(description='derivative / feature')
-parser.add_argument('--au', default='4', type=str, help='select an au number')
-parser.add_argument('--gender', default='man', type=str, help='select a gender')
-parser.add_argument('--seed', default='66', type=str, help='select a random seed')
+parser.add_argument('--au', default='4', type=str, help='select an au number: [4,6,7,10,12,20,25,26,43]')
+parser.add_argument('--gender', default='man', type=str, help='select a gender: [man, woman]')
+parser.add_argument('--seed', default='66', type=str, help='select a random seed: [16, 66]')
+parser.add_argument('--activation', default=5, type=int, help='select a random seed: [0,1,2,3,4,5]')
 args = parser.parse_args()
 
 num_classes = 10
@@ -21,14 +25,22 @@ batch_size = 32
 checkpoint_path = '/Volumes/Yuan-T7/FAU_models/models_r'+args.seed+'/checkpoint_epoch49.pth'
 root_path = '/Volumes/Yuan-T7/Datasets/FAU/images'
 
-if args.gender == 'man':    
+if args.gender == 'man': 
     gender_path  = os.path.join(root_path, 'European_Man')
-    image_path_0 = os.path.join(gender_path, 'em1/'+args.au+'em1_'+args.au+'.10.png')
-    image_path_1 = os.path.join(gender_path, 'em10/'+args.au+'em10_'+args.au+'.10.png')
+    if args.activation == 0:
+        image_path_0 = os.path.join(gender_path, 'em1/'+'em1'+'.png')
+        image_path_1 = os.path.join(gender_path, 'em10/'+'em10'+'.png')
+    else:
+        image_path_0 = os.path.join(gender_path, 'em1/'+args.au+'em1_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_1 = os.path.join(gender_path, 'em10/'+args.au+'em10_'+args.au+'.'+str(args.activation*2)+'.png')
 else:
     gender_path  = os.path.join(root_path, 'European_Woman')
-    image_path_0 = os.path.join(gender_path, 'ew1/'+args.au+'ew1_'+args.au+'.10.png')
-    image_path_1 = os.path.join(gender_path, 'ew10/'+args.au+'ew10_'+args.au+'.10.png')
+    if args.activation == 0:
+        image_path_0 = os.path.join(gender_path, 'ew1/'+'ew1'+'.png')
+        image_path_1 = os.path.join(gender_path, 'ew10/'+'ew10'+'.png')
+    else: 
+        image_path_0 = os.path.join(gender_path, 'ew1/'+args.au+'ew1_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_1 = os.path.join(gender_path, 'ew10/'+args.au+'ew10_'+args.au+'.'+str(args.activation*2)+'.png')
 
 
 def cal_derivative(image_path):
@@ -97,7 +109,7 @@ normalized_diff = np.interp(diff_array, (diff_array.min(), diff_array.max()), (0
 normalized_diff = normalized_diff - np.mean(normalized_diff)
 normalized_diff[normalized_diff < 0] = 0
 
-fig, axs = plt.subplots(2, 3, figsize=(10, 6))
+fig, axs = plt.subplots(3, 3, figsize=(10, 8))
 
 axs[0,0].imshow(normalized_light, cmap='Greys')
 axs[0,0].set_title('light')
@@ -109,20 +121,27 @@ im = axs[0,2].imshow(normalized_diff, cmap='Greys')
 axs[0,2].set_title('difference (light - dark)')
 fig.colorbar(im, ax=axs[0,2])
 
-axs[1,0].imshow(input_image_light)
-axs[1,1].imshow(input_image_dark)
+axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
+axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
+axs[1,2].imshow(input_image_light+np.tile(normalized_diff, (3,1,1)).transpose(1,2,0))
+
+axs[2,0].imshow(input_image_light)
+axs[2,1].imshow(input_image_dark)
 
 y = [0,1,2,3,4,5,6,7,8,9]
-axs[1,2].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
-axs[1,2].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
+axs[2,2].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
+axs[2,2].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
 
 for i, ax in enumerate(axs.flat):
     ax.set_xticks([])
     ax.set_yticks([])
-    if i == 5:
+    if i == 8:
         ax.set_xticks(np.arange(10), ['pspi', '4', '6', '7', '10', '12', '20', '25', '26', '43'])
         ax.set_yticks([0,1])
 
-fig.suptitle('r'+args.seed+'_au'+args.au+'_max activation')
+if args.activation == 0:
+    fig.suptitle('model '+'r'+args.seed+'_activation at '+str(args.activation*20)+'%')
+else:
+    fig.suptitle('model '+'r'+args.seed+'_au'+args.au+'_activation at '+str(args.activation*20)+'%')
 
 plt.show()
