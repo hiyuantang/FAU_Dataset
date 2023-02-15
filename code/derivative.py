@@ -46,7 +46,6 @@ model.load_state_dict(torch.load(checkpoint_path), strict=False)
 input = 0
 output = model(input)
 
-
 output.backward(retain_graph=True)
 feature_derivative = input.grad
 
