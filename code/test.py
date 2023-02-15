@@ -1,41 +1,32 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np
+import PIL.Image as Image
+import cv2
+from torchvision import datasets, models, transforms
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+image_path = '/Volumes/Yuan-T7/Datasets/FAU/images/European_Man/em1/7em1_7.10.png'
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        layer_activations = [x]  # initialize list to store layer activations
-        x = self.fc3(x)
-        layer_activations.append(x)
-        return x, layer_activations
+data_transforms = {
+        'test': transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.3873985 , 0.42637664, 0.53720075], [0.2046528 , 0.19909547, 0.19015081])
+        ]),
+    }
 
-# Create an instance of the neural network
-net = Net()
-net.train()
-# Generate a random input image and compute the output probabilities
-input_image = torch.randn(1, 3, 32, 32)
-input_image.requires_grad = True
-output, layer_activations = net(input_image)
 
-# Calculate the derivative of the output with respect to the features
-target_class = 3  # index of the target class
-loss = F.cross_entropy(output, torch.tensor([target_class]))
-net.zero_grad()
-loss.backward()
-feature_derivative = input_image.grad
+input_image = Image.open(image_path)
+input_image = input_image.convert('RGB')
+input_image = torch.tensor(np.array(input_image))
+print(input_image.shape)
+input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
+print(input_image.shape)
+input_image = input_image[:, 200:1000, 850:1650]
+print(input_image.shape)
+input_image = data_transforms['test'](input_image)
 
-print(feature_derivative.shape)
+
+print(input_image.shape)
+
