@@ -10,14 +10,17 @@ import matplotlib.pyplot as plt
 from vgg_face import *
 from FAUDataset import *
 
+# dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
+
 # sample running command: 
 # python derivative_func.py --gender man --seed 66 --activation 5 --au 4
 
-parser = argparse.ArgumentParser(description='derivative / feature')
-parser.add_argument('--au', default='4', type=str, help='select an au number: [4,6,7,10,12,20,25,26,43]')
-parser.add_argument('--gender', default='man', type=str, help='select a gender: [man, woman]')
-parser.add_argument('--seed', default='66', type=str, help='select a random seed: [16, 66]')
-parser.add_argument('--activation', default=5, type=int, help='select a random seed: [0,1,2,3,4,5]')
+parser = argparse.ArgumentParser(description='d AU# / d face change')
+parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
+parser.add_argument('--gender', default='man', type=str, help='select a gender from [man, woman]')
+parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
+parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
+parser.add_argument('--featureL', default=0, type=int, help='select a featureL from [0,1,2,3,4,5]')
 args = parser.parse_args()
 
 num_classes = 10
