@@ -104,9 +104,15 @@ dfeature = dfeature_light - dfeature_dark
 dau = output_light.sum() - output_dark.sum()
 dau_dfeature = dau / dfeature
 
+dfeature_dface = dfeature / (input_image_light - input_image_dark)
+dfeature_dface[np.isposinf(dfeature_dface)] = 0
+dfeature_dface[np.isneginf(dfeature_dface)] = 0
+
+dau_dface = dau_dfeature * dfeature_dface
+
 darray_light = np.sum(darray_light, axis=2)
 darray_dark = np.sum(darray_dark, axis=2)
-dau_dfeature = np.sum(dau_dfeature, axis=2)
+dau_dface = np.sum(dau_dface, axis=2)
 
 normalized_light = np.interp(darray_light, (darray_light.min(), darray_light.max()), (0, 1))
 normalized_light = normalized_light - np.mean(normalized_light)
@@ -114,25 +120,25 @@ normalized_light[normalized_light < 0] = 0
 normalized_dark = np.interp(darray_dark, (darray_dark.min(), darray_dark.max()), (0, 1))
 normalized_dark = normalized_dark - np.mean(normalized_dark)
 normalized_dark[normalized_dark < 0] = 0
-normalized_dau_dfeature = np.interp(dau_dfeature, (dau_dfeature.min(), dau_dfeature.max()), (0, 1))
-normalized_dau_dfeature = normalized_dau_dfeature - np.mean(normalized_dau_dfeature)
-normalized_dau_dfeature[normalized_dau_dfeature < 0] = 0
+normalized_dau_dface = np.interp(dau_dface, (dau_dface.min(), dau_dface.max()), (0, 1))
+normalized_dau_dface = normalized_dau_dface - np.mean(normalized_dau_dface)
+normalized_dau_dface[normalized_dau_dface < 0] = 0
 
 fig, axs = plt.subplots(3, 3, figsize=(10, 8))
 
 axs[0,0].imshow(normalized_light, cmap='Greys')
-axs[0,0].set_title('light')
+axs[0,0].set_title('dlight_au / dlight_feat')
 
 axs[0,1].imshow(normalized_dark, cmap='Greys')
-axs[0,1].set_title('dark')
+axs[0,1].set_title('ddark_au / ddark_feat')
 
-im = axs[0,2].imshow(normalized_dau_dfeature, cmap='Greys')
-axs[0,2].set_title('difference (light - dark)')
+im = axs[0,2].imshow(normalized_dau_dface, cmap='Greys')
+axs[0,2].set_title('dau / dface')
 fig.colorbar(im, ax=axs[0,2])
 
 axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
 axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
-axs[1,2].imshow(input_image_light+np.tile(normalized_dau_dfeature, (3,1,1)).transpose(1,2,0))
+axs[1,2].imshow(input_image_light+np.tile(normalized_dau_dface, (3,1,1)).transpose(1,2,0))
 
 axs[2,0].imshow(input_image_light)
 axs[2,1].imshow(input_image_dark)
