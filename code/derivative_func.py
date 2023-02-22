@@ -20,7 +20,7 @@ parser.add_argument('--au', default='4', type=str, help='select an au number fro
 parser.add_argument('--gender', default='man', type=str, help='select a gender from [man, woman]')
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
-parser.add_argument('--featureL', default=0, type=int, help='select a featureL from [0,1,2,3,4,5]')
+parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
 args = parser.parse_args()
 
 num_classes = 10
@@ -84,23 +84,29 @@ def cal_derivative(image_path):
     feature_derivative = input_image.grad
 
     feature_derivative = torch.squeeze(feature_derivative)
-    array = feature_derivative.permute(1, 2, 0).cpu().numpy()
+    darray = feature_derivative.permute(1, 2, 0).cpu().numpy()
     
     input_image = torch.squeeze(input_image)
     input_image = input_image.permute(1, 2, 0).cpu().detach().numpy()
     output = output.cpu().detach().numpy()
 
-    return array, input_image, output
+    return darray, input_image, output
 
 
 
 darray_light, input_image_light, output_light = cal_derivative(image_path_0)
 darray_dark, input_image_dark, output_dark = cal_derivative(image_path_1)
 
+dfeature_light = output_light.sum() / darray_light
+dfeature_dark = output_dark.sum() / darray_dark
+
+dfeature = dfeature_light - dfeature_dark
+dau = output_light.sum() - output_dark.sum()
+dau_dfeature = dau / dfeature
+
 darray_light = np.sum(darray_light, axis=2)
 darray_dark = np.sum(darray_dark, axis=2)
-
-diff_array = darray_light - darray_dark
+dau_dfeature = np.sum(dau_dfeature, axis=2)
 
 normalized_light = np.interp(darray_light, (darray_light.min(), darray_light.max()), (0, 1))
 normalized_light = normalized_light - np.mean(normalized_light)
@@ -108,9 +114,9 @@ normalized_light[normalized_light < 0] = 0
 normalized_dark = np.interp(darray_dark, (darray_dark.min(), darray_dark.max()), (0, 1))
 normalized_dark = normalized_dark - np.mean(normalized_dark)
 normalized_dark[normalized_dark < 0] = 0
-normalized_diff = np.interp(diff_array, (diff_array.min(), diff_array.max()), (0, 1))
-normalized_diff = normalized_diff - np.mean(normalized_diff)
-normalized_diff[normalized_diff < 0] = 0
+normalized_dau_dfeature = np.interp(dau_dfeature, (dau_dfeature.min(), dau_dfeature.max()), (0, 1))
+normalized_dau_dfeature = normalized_dau_dfeature - np.mean(normalized_dau_dfeature)
+normalized_dau_dfeature[normalized_dau_dfeature < 0] = 0
 
 fig, axs = plt.subplots(3, 3, figsize=(10, 8))
 
@@ -120,13 +126,13 @@ axs[0,0].set_title('light')
 axs[0,1].imshow(normalized_dark, cmap='Greys')
 axs[0,1].set_title('dark')
 
-im = axs[0,2].imshow(normalized_diff, cmap='Greys')
+im = axs[0,2].imshow(normalized_dau_dfeature, cmap='Greys')
 axs[0,2].set_title('difference (light - dark)')
 fig.colorbar(im, ax=axs[0,2])
 
 axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
 axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
-axs[1,2].imshow(input_image_light+np.tile(normalized_diff, (3,1,1)).transpose(1,2,0))
+axs[1,2].imshow(input_image_light+np.tile(normalized_dau_dfeature, (3,1,1)).transpose(1,2,0))
 
 axs[2,0].imshow(input_image_light)
 axs[2,1].imshow(input_image_dark)
