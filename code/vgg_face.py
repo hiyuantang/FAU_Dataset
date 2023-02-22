@@ -138,6 +138,11 @@ class VGG_16(nn.Module):
             return x_4
         elif cut == 5:
             return x_5
+    
+    def forward_thoughts_0(self, x):
+        x = F.relu(self.conv_1_1(x))
+        x = F.relu(self.conv_1_2(x))
+        return x
 
 
 if __name__ == "__main__":

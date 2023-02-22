@@ -90,12 +90,17 @@ def cal_derivative(image_path):
     input_image = input_image.permute(1, 2, 0).cpu().detach().numpy()
     output = output.cpu().detach().numpy()
 
-    return darray, input_image, output
+    with torch.no_grad():
+        model.eval()
+        inter_out = model.forward_thoughts_0(input_image)
+        inter_out = inter_out.cpu().detach().numpy()
+
+    return darray, input_image, output, inter_out
 
 
 
-darray_light, input_image_light, output_light = cal_derivative(image_path_0)
-darray_dark, input_image_dark, output_dark = cal_derivative(image_path_1)
+darray_light, input_image_light, output_light, interlayer_out_light = cal_derivative(image_path_0)
+darray_dark, input_image_dark, output_dark, interlayer_out_dark = cal_derivative(image_path_1)
 
 dfeature_light = output_light.sum() / darray_light
 dfeature_dark = output_dark.sum() / darray_dark
@@ -107,6 +112,7 @@ dau_dfeature = dau / dfeature
 dfeature_dface = dfeature / (input_image_light - input_image_dark)
 dfeature_dface[np.isposinf(dfeature_dface)] = 0
 dfeature_dface[np.isneginf(dfeature_dface)] = 0
+dfeature_dface[dfeature_dface != 0]
 
 dau_dface = dau_dfeature * dfeature_dface
 
