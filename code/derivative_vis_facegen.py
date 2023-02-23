@@ -10,17 +10,14 @@ import matplotlib.pyplot as plt
 from vgg_face import *
 from FAUDataset import *
 
-# dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
-
 # sample running command: 
-# python derivative_func.py --gender man --seed 66 --activation 5 --au 4
+# python derivative_vis_facegen.py --gender man --seed 66 --activation 5 --au 4
 
-parser = argparse.ArgumentParser(description='d AU# / d face change')
+parser = argparse.ArgumentParser(description='d AU# / d input')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
 parser.add_argument('--gender', default='man', type=str, help='select a gender from [man, woman]')
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
-parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
-parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
+parser.add_argument('--activation', default=5, type=int, help='select a random seed from [0,1,2,3,4,5]')
 args = parser.parse_args()
 
 num_classes = 10
@@ -84,36 +81,70 @@ def cal_derivative(image_path):
     feature_derivative = input_image.grad
 
     feature_derivative = torch.squeeze(feature_derivative)
-    darray = feature_derivative.permute(1, 2, 0).cpu().numpy()
+    array = feature_derivative.permute(1, 2, 0).cpu().numpy()
     
     input_image = torch.squeeze(input_image)
     input_image = input_image.permute(1, 2, 0).cpu().detach().numpy()
     output = output.cpu().detach().numpy()
 
-    return darray, input_image, output
+    return array, input_image, output
+
+def cal_derivative_facegen(image_path):
+    data_transforms = {
+            'test': transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                #transforms.Normalize([0.3873985 , 0.42637664, 0.53720075], [0.2046528 , 0.19909547, 0.19015081])
+            ]),
+        }
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+    
+    model = VGG_16()
+    num_ftrs = model.fc8.in_features
+    model.fc8 = nn.Linear(num_ftrs, num_classes)
+    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')), strict=False)
+
+    model.train()
+
+    input_image = Image.open(image_path)
+    input_image = input_image.convert('RGB')
+    input_image = torch.tensor(np.array(input_image))
+    input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
+    input_image = data_transforms['test'](input_image)
+    input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
+    input_image.requires_grad = True
+
+    model.to('cpu')
+    input_image.to('cpu')
+    output = model(input_image)
+    loss = torch.sum(output)
+
+    loss.backward(retain_graph=True)
+    feature_derivative = input_image.grad
+
+    feature_derivative = torch.squeeze(feature_derivative)
+    array = feature_derivative.permute(1, 2, 0).cpu().numpy()
+    
+    input_image = torch.squeeze(input_image)
+    input_image = input_image.permute(1, 2, 0).cpu().detach().numpy()
+    output = output.cpu().detach().numpy()
+
+    return array, input_image, output
 
 
 
-darray_light, input_image_light, output_light, interlayer_out_light = cal_derivative(image_path_0)
-darray_dark, input_image_dark, output_dark, interlayer_out_dark = cal_derivative(image_path_1)
+darray_light, input_image_light, output_light = cal_derivative(image_path_0)
+darray_dark, input_image_dark, output_dark = cal_derivative(image_path_1)
 
-dfeature_light = output_light.sum() / darray_light
-dfeature_dark = output_dark.sum() / darray_dark
-
-dfeature = dfeature_light - dfeature_dark
-dau = output_light.sum() - output_dark.sum()
-dau_dfeature = dau / dfeature
-
-dfeature_dface = dfeature / (input_image_light - input_image_dark)
-dfeature_dface[np.isposinf(dfeature_dface)] = 0
-dfeature_dface[np.isneginf(dfeature_dface)] = 0
-dfeature_dface[dfeature_dface != 0]
-
-dau_dface = dau_dfeature * dfeature_dface
+facegen_path = '/Volumes/Yuan-T7/Datasets/Face_gen/11.17/2_6a_6.10.png'
+darray_facegen, input_facegen, output_facegen = cal_derivative_facegen(facegen_path)
 
 darray_light = np.sum(darray_light, axis=2)
 darray_dark = np.sum(darray_dark, axis=2)
-dau_dface = np.sum(dau_dface, axis=2)
+darray_facegen = np.sum(darray_facegen, axis=2)
 
 normalized_light = np.interp(darray_light, (darray_light.min(), darray_light.max()), (0, 1))
 normalized_light = normalized_light - np.mean(normalized_light)
@@ -121,25 +152,25 @@ normalized_light[normalized_light < 0] = 0
 normalized_dark = np.interp(darray_dark, (darray_dark.min(), darray_dark.max()), (0, 1))
 normalized_dark = normalized_dark - np.mean(normalized_dark)
 normalized_dark[normalized_dark < 0] = 0
-normalized_dau_dface = np.interp(dau_dface, (dau_dface.min(), dau_dface.max()), (0, 1))
-normalized_dau_dface = normalized_dau_dface - np.mean(normalized_dau_dface)
-normalized_dau_dface[normalized_dau_dface < 0] = 0
+normalized_facegen = np.interp(darray_facegen, (darray_facegen.min(), darray_facegen.max()), (0, 1))
+normalized_facegen = normalized_facegen - np.mean(normalized_facegen)
+normalized_facegen[normalized_facegen < 0] = 0
 
 fig, axs = plt.subplots(3, 3, figsize=(10, 8))
 
 axs[0,0].imshow(normalized_light, cmap='Greys')
-axs[0,0].set_title('dlight_au / dlight_feat')
+axs[0,0].set_title('light')
 
 axs[0,1].imshow(normalized_dark, cmap='Greys')
-axs[0,1].set_title('ddark_au / ddark_feat')
+axs[0,1].set_title('dark')
 
-im = axs[0,2].imshow(normalized_dau_dface, cmap='Greys')
-axs[0,2].set_title('dau / dface')
+im = axs[0,2].imshow(normalized_facegen, cmap='Greys')
+axs[0,2].set_title('facegen')
 fig.colorbar(im, ax=axs[0,2])
 
 axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
 axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
-axs[1,2].imshow(input_image_light+np.tile(normalized_dau_dface, (3,1,1)).transpose(1,2,0))
+axs[1,2].imshow(input_facegen+np.tile(normalized_facegen, (3,1,1)).transpose(1,2,0))
 
 axs[2,0].imshow(input_image_light)
 axs[2,1].imshow(input_image_dark)
@@ -147,6 +178,7 @@ axs[2,1].imshow(input_image_dark)
 y = [0,1,2,3,4,5,6,7,8,9]
 axs[2,2].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
 axs[2,2].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
+axs[2,2].plot(y, output_facegen.reshape(10,1), marker = 'o', c = '#1560bd')
 
 for i, ax in enumerate(axs.flat):
     ax.set_xticks([])
