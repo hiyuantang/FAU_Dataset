@@ -120,7 +120,8 @@ def cal_derivative_facegen(image_path):
     model.to('cpu')
     input_image.to('cpu')
     output = model(input_image)
-    loss = torch.sum(output)
+    # loss = torch.sum(output)
+    # loss = output[#]
 
     loss.backward(retain_graph=True)
     feature_derivative = input_image.grad
@@ -139,7 +140,7 @@ def cal_derivative_facegen(image_path):
 darray_light, input_image_light, output_light = cal_derivative(image_path_0)
 darray_dark, input_image_dark, output_dark = cal_derivative(image_path_1)
 
-facegen_path = '/Volumes/Yuan-T7/Datasets/Face_gen/11.17/2_6a_6.10.png'
+facegen_path = '/Volumes/Yuan-T7/Datasets/Face_gen/9.19/164e_7.100.png'
 darray_facegen, input_facegen, output_facegen = cal_derivative_facegen(facegen_path)
 
 darray_light = np.sum(darray_light, axis=2)
