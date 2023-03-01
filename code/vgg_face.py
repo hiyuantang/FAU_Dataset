@@ -139,11 +139,84 @@ class VGG_16(nn.Module):
         elif cut == 5:
             return x_5
     
-    def forward_thoughts_0(self, x):
-        x = F.relu(self.conv_1_1(x))
-        x = F.relu(self.conv_1_2(x))
-        return x
+    def forward_0(self, x):
+        x = F.relu(self.conv_2_1(x))
+        x = F.relu(self.conv_2_2(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_3_1(x))
+        x = F.relu(self.conv_3_2(x))
+        x = F.relu(self.conv_3_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_4_1(x))
+        x = F.relu(self.conv_4_2(x))
+        x = F.relu(self.conv_4_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_5_1(x))
+        x = F.relu(self.conv_5_2(x))
+        x = F.relu(self.conv_5_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc6(x))
+        x = self.dropout6(x)
+        x = F.relu(self.fc7(x))
+        x = self.dropout7(x)
+        return self.fc8(x)
 
+    def forward_1(self, x):
+        x = F.relu(self.conv_3_1(x))
+        x = F.relu(self.conv_3_2(x))
+        x = F.relu(self.conv_3_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_4_1(x))
+        x = F.relu(self.conv_4_2(x))
+        x = F.relu(self.conv_4_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_5_1(x))
+        x = F.relu(self.conv_5_2(x))
+        x = F.relu(self.conv_5_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc6(x))
+        x = self.dropout6(x)
+        x = F.relu(self.fc7(x))
+        x = self.dropout7(x)
+        return self.fc8(x)
+
+    def forward_2(self, x):
+        x = F.relu(self.conv_4_1(x))
+        x = F.relu(self.conv_4_2(x))
+        x = F.relu(self.conv_4_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv_5_1(x))
+        x = F.relu(self.conv_5_2(x))
+        x = F.relu(self.conv_5_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc6(x))
+        x = self.dropout6(x)
+        x = F.relu(self.fc7(x))
+        x = self.dropout7(x)
+        return self.fc8(x)
+    
+    def forward_3(self, x):
+        x = F.relu(self.conv_5_1(x))
+        x = F.relu(self.conv_5_2(x))
+        x = F.relu(self.conv_5_3(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc6(x))
+        x = self.dropout6(x)
+        x = F.relu(self.fc7(x))
+        x = self.dropout7(x)
+        return self.fc8(x)
+    
+    def forward_4(self, x):
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc6(x))
+        x = self.dropout6(x)
+        x = F.relu(self.fc7(x))
+        x = self.dropout7(x)
+        return self.fc8(x)
 
 if __name__ == "__main__":
     model = VGG_16()

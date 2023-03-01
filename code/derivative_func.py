@@ -13,7 +13,7 @@ from FAUDataset import *
 # dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
 
 # sample running command: 
-# python derivative_func.py --gender man --seed 66 --activation 5 --au 4
+# python derivative_func.py --gender man --seed 66 --activation 5 --au 4 --cut 0
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
@@ -21,7 +21,9 @@ parser.add_argument('--gender', default='man', type=str, help='select a gender f
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
 parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
+parser.add_argument('--cut', default=0, type=int, help='select a hidden_state from 0 to 4')
 args = parser.parse_args()
+
 
 num_classes = 10
 batch_size = 32
@@ -45,8 +47,13 @@ else:
         image_path_0 = os.path.join(gender_path, 'ew5/'+args.au+'ew5_'+args.au+'.'+str(args.activation*2)+'.png')
         image_path_1 = os.path.join(gender_path, 'ew6/'+args.au+'ew6_'+args.au+'.'+str(args.activation*2)+'.png')
 
+# choose index from 2 to inf
+def array_repeat(x, index):
+    x = np.repeat(x, index, axis = 0)
+    x = np.repeat(x, index, axis = 1)
+    return x
 
-def cal_derivative(image_path):
+def cal_derivative(image_path, cut):
     data_transforms = {
             'test': transforms.Compose([
                 transforms.ToPILImage(),
@@ -63,83 +70,83 @@ def cal_derivative(image_path):
     num_ftrs = model.fc8.in_features
     model.fc8 = nn.Linear(num_ftrs, num_classes)
     model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')), strict=False)
-
-    model.train()
-
-    input_image = Image.open(image_path)
-    input_image = input_image.convert('RGB')
-    input_image = torch.tensor(np.array(input_image))
-    input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
-    input_image = input_image[:, 200:1000, 850:1650]
-    input_image = data_transforms['test'](input_image)
-    input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
-    input_image.requires_grad = True
-
     model.to('cpu')
-    input_image.to('cpu')
-    output = model(input_image)
-    loss = torch.sum(output)
 
+    model.eval()
+    with torch.no_grad():
+        input_image = Image.open(image_path)
+        input_image = input_image.convert('RGB')
+        input_image = torch.tensor(np.array(input_image)).to('cpu')
+        input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
+        input_image = input_image[:, 200:1000, 850:1650]
+        input_image = data_transforms['test'](input_image)
+        input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
+        input_inter = model.forward_thoughts(input_image, args.cut)
+    
+    model.train()
+    input_inter.requires_grad = True
+
+    if args.cut == 0:
+        output = model.forward_0(input_inter)
+    elif args.cut == 1:
+        output = model.forward_1(input_inter)
+    elif args.cut == 2:
+        output = model.forward_2(input_inter)
+    elif args.cut == 3:
+        output = model.forward_3(input_inter)
+    elif args.cut == 4:
+        output = model.forward_4(input_inter)
+    au_list = ['pspi', '4', '6', '7', '10', '12', '20', '25', '26', '43']
+    loss = output[0, au_list.index(args.au)]
     loss.backward(retain_graph=True)
-    feature_derivative = input_image.grad
+    feature_derivative = input_inter.grad
 
-    feature_derivative = torch.squeeze(feature_derivative)
-    darray = feature_derivative.permute(1, 2, 0).cpu().numpy()
+    #feature_derivative = torch.squeeze(feature_derivative)
+    #darray = feature_derivative.permute(1, 2, 0).cpu().numpy()
     
     input_image = torch.squeeze(input_image)
     input_image = input_image.permute(1, 2, 0).cpu().detach().numpy()
+    input_inter = input_inter.cpu().detach().numpy()
+
     output = output.cpu().detach().numpy()
 
-    return darray, input_image, output
+    return feature_derivative, input_image, input_inter, output
 
 
 
-darray_light, input_image_light, output_light, interlayer_out_light = cal_derivative(image_path_0)
-darray_dark, input_image_dark, output_dark, interlayer_out_dark = cal_derivative(image_path_1)
+darray_light, input_image_light, inter_light, output_light = cal_derivative(image_path_0, args.cut)
+darray_dark, input_image_dark, inter_dark, output_dark = cal_derivative(image_path_1, args.cut)
 
-dfeature_light = output_light.sum() / darray_light
-dfeature_dark = output_dark.sum() / darray_dark
+dfeature = inter_light - inter_dark
 
-dfeature = dfeature_light - dfeature_dark
-dau = output_light.sum() - output_dark.sum()
-dau_dfeature = dau / dfeature
+dau_dface_light = torch.squeeze(darray_light * dfeature)
+dau_dface_dark = torch.squeeze(darray_dark * dfeature)
 
-dfeature_dface = dfeature / (input_image_light - input_image_dark)
-dfeature_dface[np.isposinf(dfeature_dface)] = 0
-dfeature_dface[np.isneginf(dfeature_dface)] = 0
-dfeature_dface[dfeature_dface != 0]
+dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)
+dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)
 
-dau_dface = dau_dfeature * dfeature_dface
 
-darray_light = np.sum(darray_light, axis=2)
-darray_dark = np.sum(darray_dark, axis=2)
-dau_dface = np.sum(dau_dface, axis=2)
-
-normalized_light = np.interp(darray_light, (darray_light.min(), darray_light.max()), (0, 1))
+normalized_light = np.interp(dau_dface_light, (dau_dface_light.min(), dau_dface_light.max()), (0, 1))
 normalized_light = normalized_light - np.mean(normalized_light)
 normalized_light[normalized_light < 0] = 0
-normalized_dark = np.interp(darray_dark, (darray_dark.min(), darray_dark.max()), (0, 1))
+print(normalized_light.shape)
+normalized_light = array_repeat(normalized_light, 2**(args.cut+1))
+print(normalized_light.shape)
+normalized_dark = np.interp(dau_dface_dark, (dau_dface_dark.min(), dau_dface_dark.max()), (0, 1))
 normalized_dark = normalized_dark - np.mean(normalized_dark)
 normalized_dark[normalized_dark < 0] = 0
-normalized_dau_dface = np.interp(dau_dface, (dau_dface.min(), dau_dface.max()), (0, 1))
-normalized_dau_dface = normalized_dau_dface - np.mean(normalized_dau_dface)
-normalized_dau_dface[normalized_dau_dface < 0] = 0
+normalized_dark = array_repeat(normalized_dark, 2**(args.cut+1))
 
 fig, axs = plt.subplots(3, 3, figsize=(10, 8))
 
 axs[0,0].imshow(normalized_light, cmap='Greys')
-axs[0,0].set_title('dlight_au / dlight_feat')
+axs[0,0].set_title('dlight_au / dface')
 
 axs[0,1].imshow(normalized_dark, cmap='Greys')
-axs[0,1].set_title('ddark_au / ddark_feat')
-
-im = axs[0,2].imshow(normalized_dau_dface, cmap='Greys')
-axs[0,2].set_title('dau / dface')
-fig.colorbar(im, ax=axs[0,2])
+axs[0,1].set_title('ddark_au / dface')
 
 axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
 axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
-axs[1,2].imshow(input_image_light+np.tile(normalized_dau_dface, (3,1,1)).transpose(1,2,0))
 
 axs[2,0].imshow(input_image_light)
 axs[2,1].imshow(input_image_dark)
@@ -147,6 +154,9 @@ axs[2,1].imshow(input_image_dark)
 y = [0,1,2,3,4,5,6,7,8,9]
 axs[2,2].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
 axs[2,2].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
+
+axs[0,2].axis('off')
+axs[1,2].axis('off')
 
 for i, ax in enumerate(axs.flat):
     ax.set_xticks([])
@@ -156,8 +166,8 @@ for i, ax in enumerate(axs.flat):
         ax.set_yticks([0,1])
 
 if args.activation == 0:
-    fig.suptitle('model '+'r'+args.seed+'_activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+'r'+args.seed+' | activation at '+str(args.activation*20)+'%'+' | hidden_state '+str(args.cut))
 else:
-    fig.suptitle('model '+'r'+args.seed+'_au'+args.au+'_activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+'r'+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%'+' | hidden_state '+str(args.cut))
 
 plt.show()
