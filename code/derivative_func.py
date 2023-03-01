@@ -21,7 +21,6 @@ parser.add_argument('--gender', default='man', type=str, help='select a gender f
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
 parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
-parser.add_argument('--cut', default=0, type=int, help='select a hidden_state from 0 to 4')
 args = parser.parse_args()
 
 
@@ -81,20 +80,20 @@ def cal_derivative(image_path, cut):
         input_image = input_image[:, 200:1000, 850:1650]
         input_image = data_transforms['test'](input_image)
         input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
-        input_inter = model.forward_thoughts(input_image, args.cut)
+        input_inter = model.forward_thoughts(input_image, cut)
     
     model.train()
     input_inter.requires_grad = True
 
-    if args.cut == 0:
+    if cut == 0:
         output = model.forward_0(input_inter)
-    elif args.cut == 1:
+    elif cut == 1:
         output = model.forward_1(input_inter)
-    elif args.cut == 2:
+    elif cut == 2:
         output = model.forward_2(input_inter)
-    elif args.cut == 3:
+    elif cut == 3:
         output = model.forward_3(input_inter)
-    elif args.cut == 4:
+    elif cut == 4:
         output = model.forward_4(input_inter)
     au_list = ['pspi', '4', '6', '7', '10', '12', '20', '25', '26', '43']
     loss = output[0, au_list.index(args.au)]
@@ -112,62 +111,64 @@ def cal_derivative(image_path, cut):
 
     return feature_derivative, input_image, input_inter, output
 
+fig, axs = plt.subplots(3, 5, figsize=(13, 8))
+for cut in range(5):
+    darray_light, input_image_light, inter_light, output_light = cal_derivative(image_path_0, cut)
+    darray_dark, input_image_dark, inter_dark, output_dark = cal_derivative(image_path_1, cut)
+
+    dfeature = inter_light - inter_dark
+
+    dau_dface_light = torch.squeeze(darray_light * dfeature)
+    dau_dface_dark = torch.squeeze(darray_dark * dfeature)
+
+    dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)
+    dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)
 
 
-darray_light, input_image_light, inter_light, output_light = cal_derivative(image_path_0, args.cut)
-darray_dark, input_image_dark, inter_dark, output_dark = cal_derivative(image_path_1, args.cut)
+    normalized_light = np.interp(dau_dface_light, (dau_dface_light.min(), dau_dface_light.max()), (0, 1))
+    normalized_light = normalized_light - np.mean(normalized_light)
+    normalized_light[normalized_light < 0] = 0
+    normalized_light = array_repeat(normalized_light, 2**(cut+1))
+    normalized_dark = np.interp(dau_dface_dark, (dau_dface_dark.min(), dau_dface_dark.max()), (0, 1))
+    normalized_dark = normalized_dark - np.mean(normalized_dark)
+    normalized_dark[normalized_dark < 0] = 0
+    normalized_dark = array_repeat(normalized_dark, 2**(cut+1))
 
-dfeature = inter_light - inter_dark
+    axs[0,cut].imshow(normalized_light, cmap='Greys')
+    axs[0,cut].set_title('hidden_state'+str(cut))
 
-dau_dface_light = torch.squeeze(darray_light * dfeature)
-dau_dface_dark = torch.squeeze(darray_dark * dfeature)
+    #axs[0,1].imshow(normalized_dark, cmap='Greys')
+    #axs[0,1].set_title('ddark_au / dface')
 
-dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)
-dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)
+    axs[1,cut].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
+    #axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
 
+    if cut == 0:
+        axs[2,cut].imshow(input_image_light)
+        #axs[2,1].imshow(input_image_dark)
+    else:
+        pass
 
-normalized_light = np.interp(dau_dface_light, (dau_dface_light.min(), dau_dface_light.max()), (0, 1))
-normalized_light = normalized_light - np.mean(normalized_light)
-normalized_light[normalized_light < 0] = 0
-print(normalized_light.shape)
-normalized_light = array_repeat(normalized_light, 2**(args.cut+1))
-print(normalized_light.shape)
-normalized_dark = np.interp(dau_dface_dark, (dau_dface_dark.min(), dau_dface_dark.max()), (0, 1))
-normalized_dark = normalized_dark - np.mean(normalized_dark)
-normalized_dark[normalized_dark < 0] = 0
-normalized_dark = array_repeat(normalized_dark, 2**(args.cut+1))
-
-fig, axs = plt.subplots(3, 3, figsize=(10, 8))
-
-axs[0,0].imshow(normalized_light, cmap='Greys')
-axs[0,0].set_title('dlight_au / dface')
-
-axs[0,1].imshow(normalized_dark, cmap='Greys')
-axs[0,1].set_title('ddark_au / dface')
-
-axs[1,0].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
-axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
-
-axs[2,0].imshow(input_image_light)
-axs[2,1].imshow(input_image_dark)
-
+##########################
 y = [0,1,2,3,4,5,6,7,8,9]
-axs[2,2].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
-axs[2,2].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
+axs[2,1].plot(y, output_light.reshape(10,1), marker = 'o', c = '#f7ead0')
+axs[2,1].plot(y, output_dark.reshape(10,1), marker = 'o', c = '#3a312a')
 
-axs[0,2].axis('off')
-axs[1,2].axis('off')
+axs[2,2].axis('off')
+axs[2,3].axis('off')
+axs[2,4].axis('off')
+##########################
 
 for i, ax in enumerate(axs.flat):
     ax.set_xticks([])
     ax.set_yticks([])
-    if i == 8:
+    if i == 11:
         ax.set_xticks(np.arange(10), ['pspi', '4', '6', '7', '10', '12', '20', '25', '26', '43'])
         ax.set_yticks([0,1])
 
 if args.activation == 0:
-    fig.suptitle('model '+'r'+args.seed+' | activation at '+str(args.activation*20)+'%'+' | hidden_state '+str(args.cut))
+    fig.suptitle('model '+'r'+args.seed+' | activation at '+str(args.activation*20)+'%')
 else:
-    fig.suptitle('model '+'r'+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%'+' | hidden_state '+str(args.cut))
+    fig.suptitle('model '+'r'+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%')
 
 plt.show()
