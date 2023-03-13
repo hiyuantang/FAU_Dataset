@@ -26,7 +26,8 @@ args = parser.parse_args()
 
 num_classes = 10
 batch_size = 32
-checkpoint_path = '/Volumes/Yuan-T7/FAU_models/models_r'+args.seed+'/checkpoint_epoch49.pth'
+#checkpoint_path = '/Volumes/Yuan-T7/FAU_models/models_r'+args.seed+'/checkpoint_epoch49.pth'
+checkpoint_path = '/Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth'
 root_path = '/Volumes/Yuan-T7/Datasets/FAU/images'
 
 if args.gender == 'man': 
