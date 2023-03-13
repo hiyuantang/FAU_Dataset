@@ -71,7 +71,7 @@ def cal_derivative(image_path, cut):
         input_image = input_image.convert('RGB')
         input_image = torch.tensor(np.array(input_image)).to('cpu')
         input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
-        #input_image = input_image[:, 200:1000, 850:1650]
+        input_image = input_image[:, 100:700, 50:650]
         input_image = data_transforms['test'](input_image)
         input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
         input_inter = model.forward_thoughts(input_image, cut)
