@@ -17,8 +17,8 @@ from FAUDataset import *
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
-parser.add_argument('--race', default='african', type=str, help='select a gender from [man, woman]')
-parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
+parser.add_argument('--race', default='african', type=str, help='select a gender from [african, european]')
+parser.add_argument('--seed', default='66', type=str, help='select a random seed from [init, 16, 66]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [1,2,3,4,5]')
 args = parser.parse_args()
 
