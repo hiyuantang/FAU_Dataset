@@ -13,39 +13,32 @@ from FAUDataset import *
 # dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
 
 # sample running command: 
-# python derivative_func.py --gender man --seed 66 --activation 5 --au 4
+# python derivative_func_facegen.py --race african --seed init --activation 5 --au 4
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
-parser.add_argument('--gender', default='man', type=str, help='select a gender from [man, woman]')
+parser.add_argument('--race', default='african', type=str, help='select a gender from [man, woman]')
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [16, 66]')
-parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
-parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
+parser.add_argument('--activation', default=5, type=int, help='select an activation level from [1,2,3,4,5]')
 args = parser.parse_args()
 
 
 num_classes = 10
 batch_size = 32
-#checkpoint_path = '/Volumes/Yuan-T7/FAU_models/models_r'+args.seed+'/checkpoint_epoch49.pth'
-checkpoint_path = '/Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth'
-root_path = '/Volumes/Yuan-T7/Datasets/FAU/images'
-
-if args.gender == 'man': 
-    gender_path  = os.path.join(root_path, 'European_Man')
-    if args.activation == 0:
-        image_path_0 = os.path.join(gender_path, 'em5/'+'em5'+'.png')
-        image_path_1 = os.path.join(gender_path, 'em6/'+'em6'+'.png')
-    else:
-        image_path_0 = os.path.join(gender_path, 'em5/'+args.au+'em5_'+args.au+'.'+str(args.activation*2)+'.png')
-        image_path_1 = os.path.join(gender_path, 'em6/'+args.au+'em6_'+args.au+'.'+str(args.activation*2)+'.png')
+if args.seed == 'init':
+    checkpoint_path = '/Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth'
 else:
-    gender_path  = os.path.join(root_path, 'European_Woman')
-    if args.activation == 0:
-        image_path_0 = os.path.join(gender_path, 'ew5/'+'ew5'+'.png')
-        image_path_1 = os.path.join(gender_path, 'ew6/'+'ew6'+'.png')
-    else: 
-        image_path_0 = os.path.join(gender_path, 'ew5/'+args.au+'ew5_'+args.au+'.'+str(args.activation*2)+'.png')
-        image_path_1 = os.path.join(gender_path, 'ew6/'+args.au+'ew6_'+args.au+'.'+str(args.activation*2)+'.png')
+    checkpoint_path = '/Volumes/Yuan-T7/FAU_models/models_r'+args.seed+'/checkpoint_epoch49.pth'
+root_path = '/Volumes/Yuan-T7/Datasets/face_gen/images'
+
+if args.race == 'african': 
+    race_path  = os.path.join(root_path, 'African')
+    image_path_0 = os.path.join(race_path, 'aw/'+args.au+'aw_'+args.au+'.'+str(args.activation*2)+'.png')
+    image_path_1 = os.path.join(race_path, 'a/'+args.au+'a_'+args.au+'.'+str(args.activation*2)+'.png')
+else:
+    race_path  = os.path.join(root_path, 'European')
+    image_path_0 = os.path.join(race_path, 'e/'+args.au+'e_'+args.au+'.'+str(args.activation*2)+'.png')
+    image_path_1 = os.path.join(race_path, 'eb/'+args.au+'eb_'+args.au+'.'+str(args.activation*2)+'.png')
 
 # choose index from 2 to inf
 def array_repeat(x, index):
@@ -78,7 +71,7 @@ def cal_derivative(image_path, cut):
         input_image = input_image.convert('RGB')
         input_image = torch.tensor(np.array(input_image)).to('cpu')
         input_image = torch.transpose(input_image, 0, 2).transpose(1, 2)
-        input_image = input_image[:, 200:1000, 850:1650]
+        #input_image = input_image[:, 200:1000, 850:1650]
         input_image = data_transforms['test'](input_image)
         input_image = input_image.view(1, input_image.shape[0], input_image.shape[1], input_image.shape[2])
         input_inter = model.forward_thoughts(input_image, cut)
@@ -168,8 +161,8 @@ for i, ax in enumerate(axs.flat):
         ax.set_yticks([0,1])
 
 if args.activation == 0:
-    fig.suptitle('model '+'r'+args.seed+' | activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+args.seed+' | activation at '+str(args.activation*20)+'%')
 else:
-    fig.suptitle('model '+'r'+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%')
 
 plt.show()
