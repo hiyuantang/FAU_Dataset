@@ -13,7 +13,7 @@ from FAUDataset import *
 # dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
 
 # sample running command: 
-# python derivative_func.py --gender man --seed 66 --activation 5 --au 4
+# python derivative_func.py --gender man --seed 82 --activation 5 --au 4
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
