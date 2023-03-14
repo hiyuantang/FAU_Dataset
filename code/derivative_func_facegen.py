@@ -62,7 +62,7 @@ def cal_derivative(image_path, cut):
     model = VGG_16()
     num_ftrs = model.fc8.in_features
     model.fc8 = nn.Linear(num_ftrs, num_classes)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')), strict=False)
+    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')))
     model.to('cpu')
 
     model.eval()
