@@ -20,7 +20,6 @@ parser.add_argument('--au', default='4', type=str, help='select an au number fro
 parser.add_argument('--gender', default='man', type=str, help='select a gender from [man, woman]')
 parser.add_argument('--seed', default='66', type=str, help='select a random seed from [init, 16, 66]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [0,1,2,3,4,5]')
-parser.add_argument('--featureL', default=0, type=int, help='select a feature layer from 0 to 15')
 args = parser.parse_args()
 
 
@@ -71,7 +70,7 @@ def cal_derivative(image_path, cut):
     model = VGG_16()
     num_ftrs = model.fc8.in_features
     model.fc8 = nn.Linear(num_ftrs, num_classes)
-    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')), strict=False)
+    model.load_state_dict(torch.load(checkpoint_path, map_location=torch.device('mps')))
     model.to('cpu')
 
     model.eval()
@@ -170,8 +169,8 @@ for i, ax in enumerate(axs.flat):
         ax.set_yticks([0,1])
 
 if args.activation == 0:
-    fig.suptitle('model '+'r'+args.seed+' | activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+args.seed+' | activation at '+str(args.activation*20)+'%')
 else:
-    fig.suptitle('model '+'r'+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%')
+    fig.suptitle('model '+args.seed+' | au'+args.au+' | activation at '+str(args.activation*20)+'%')
 
 plt.show()
