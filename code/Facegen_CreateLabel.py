@@ -6,6 +6,7 @@ import json
 #Once you have the datasets [European_Man] and [European_Woman], create a root directory and unzip the datasets in folder root/images before running the script. 
 #Sample bash command: 
 # python Facegen_CreateLabel.py -r /Volumes/Yuan-T7/Datasets/face_gen_single
+# python Facegen_CreateLabel.py -r D:/Datasets/face_gen_single
 #Sample label outcome for each image: 
 # {"PSPI": 0.2, "au4": 0.2, "au6": 0.0, "au7": 0.0, "au10": 0.0, "au12": 0.0, "au20": 0.0, "au25": 0.0, "au26": 0.0, "au43": 0.0}
 
