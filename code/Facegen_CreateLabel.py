@@ -5,7 +5,7 @@ import json
 #This file will generate the labels for FAU Dataset
 #Once you have the datasets [European_Man] and [European_Woman], create a root directory and unzip the datasets in folder root/images before running the script. 
 #Sample bash command: 
-# python Facegen_CreateLabel.py -r /Volumes/Yuan-T7/Datasets/face_gen
+# python Facegen_CreateLabel.py -r /Volumes/Yuan-T7/Datasets/face_gen_single
 #Sample label outcome for each image: 
 # {"PSPI": 0.2, "au4": 0.2, "au6": 0.0, "au7": 0.0, "au10": 0.0, "au12": 0.0, "au20": 0.0, "au25": 0.0, "au26": 0.0, "au43": 0.0}
 
@@ -75,9 +75,12 @@ for i in next(os.walk(image_dir))[1]:
             except:
                 image_name = z[0:-4]
                 label_file_name = image_name+'.txt'
-
+            
+            ######################
+            # remove au9
             content.pop('au9')
             json_object = json.dumps(content)
+            ######################
 
             target_label_path = os.path.join(updated_label_dir_final, label_file_name)
             with open(target_label_path, 'w') as outfile:
