@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train.py --seed 66 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
+# python train.py --seed 1 --dataset_root D:/Datasets/face_gen_single --resume D:/FAU_models/models_r82/checkpoint_epoch49.pth
 # sampe bash command Mac: 
-# python train.py --seed 66 --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
+# python train.py --seed 1 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
