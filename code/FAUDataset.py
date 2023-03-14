@@ -40,7 +40,7 @@ class FAUDataset(Dataset):
         image_path = label_path.replace('labels', 'images')
         image_path = image_path.replace('.txt', '.png')
         image = cv2.imread(image_path)
-        # image size: (1080, 1920, 3) --> (1080, 1920, 3)
+        # image size: (1080, 1920, 3) --> (800, 800, 3)
         image = image[200:1000, 850:1650,:]
 
         with open(label_path) as f:
