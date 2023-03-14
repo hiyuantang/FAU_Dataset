@@ -17,7 +17,10 @@ from FAUDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
-# sampe bash command: python D:\GitHub\FAU_Dataset\code\train.py --seed 66 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
+# sampe bash command Windows: 
+# python train.py --seed 66 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
+# sampe bash command Mac: 
+# python train.py --seed 66 --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -53,14 +56,14 @@ def test_model(model):
         print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', loss, pspi_mse, pspi_mae)+ '\n')
     return loss, mses, maes
 
-parser = argparse.ArgumentParser(description='FAU Dataset Training')
+parser = argparse.ArgumentParser(description='FAU Dataset Training & Testing')
 parser.add_argument('--seed', default=16, type=int, help='seed for initializing training. ')
 parser.add_argument('--epochs', default=50, type=int, help="number of epochs for training")
 parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--test_set', '-t', default=[6, 7, 8, 9, 10], type=list, 
+parser.add_argument('--test_set', '-t', default=[9, 10], type=list, 
                     help='take in a list of skin color scale')
 parser.add_argument('--dataset_root', default='D:/Datasets/FAU', 
                     help='the root path of FAU Dataset')
@@ -154,7 +157,7 @@ model.fc8 = nn.Linear(num_ftrs, num_classes)
 if args.resume is None:
     pass
 else:
-    model.load_state_dict(torch.load(args.resume), strict=False)
+    model.load_state_dict(torch.load(args.resume))
 
 train_dataset = FAUDataset(args.dataset_root, subjects = train_subjects, transform=data_transforms['train'])
 test_dataset = FAUDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
