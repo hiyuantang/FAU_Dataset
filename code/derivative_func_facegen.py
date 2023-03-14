@@ -134,7 +134,7 @@ for cut in range(5):
     #axs[0,cut].imshow(normalized_dark, cmap='Greys')
     #axs[0,cut].set_title('hidden_state'+str(cut))
 
-    axs[1,cut].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
+    axs[1,cut].imshow(input_image_light+np.tile(np.negative(normalized_light), (3,1,1)).transpose(1,2,0))
     #axs[1,cut].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
 
     if cut == 0:
@@ -143,7 +143,8 @@ for cut in range(5):
     else:
         pass
 
-fig.colorbar(axs[0,cut].imshow(normalized_light, cmap='Greys'), ax=axs[0,4])
+fig.colorbar(axs[0,cut].imshow(normalized_light, cmap='Greys'), ax=axs[0,:])
+fig.colorbar(axs[0,cut].imshow(normalized_light, cmap='Greys'), ax=axs[1,:])
 
 ##########################
 y = [0,1,2,3,4,5,6,7,8,9]
