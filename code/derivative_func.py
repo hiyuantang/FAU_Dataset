@@ -34,19 +34,19 @@ root_path = '/Volumes/Yuan-T7/Datasets/FAU/images'
 if args.gender == 'man': 
     gender_path  = os.path.join(root_path, 'European_Man')
     if args.activation == 0:
-        image_path_0 = os.path.join(gender_path, 'em5/'+'em5'+'.png')
-        image_path_1 = os.path.join(gender_path, 'em6/'+'em6'+'.png')
+        image_path_0 = os.path.join(gender_path, 'em3/'+'em3'+'.png')
+        image_path_1 = os.path.join(gender_path, 'em8/'+'em8'+'.png')
     else:
-        image_path_0 = os.path.join(gender_path, 'em5/'+args.au+'em5_'+args.au+'.'+str(args.activation*2)+'.png')
-        image_path_1 = os.path.join(gender_path, 'em6/'+args.au+'em6_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_0 = os.path.join(gender_path, 'em3/'+args.au+'em3_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_1 = os.path.join(gender_path, 'em8/'+args.au+'em8_'+args.au+'.'+str(args.activation*2)+'.png')
 else:
     gender_path  = os.path.join(root_path, 'European_Woman')
     if args.activation == 0:
-        image_path_0 = os.path.join(gender_path, 'ew5/'+'ew5'+'.png')
-        image_path_1 = os.path.join(gender_path, 'ew6/'+'ew6'+'.png')
+        image_path_0 = os.path.join(gender_path, 'ew3/'+'ew3'+'.png')
+        image_path_1 = os.path.join(gender_path, 'ew8/'+'ew8'+'.png')
     else: 
-        image_path_0 = os.path.join(gender_path, 'ew5/'+args.au+'ew5_'+args.au+'.'+str(args.activation*2)+'.png')
-        image_path_1 = os.path.join(gender_path, 'ew6/'+args.au+'ew6_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_0 = os.path.join(gender_path, 'ew3/'+args.au+'ew3_'+args.au+'.'+str(args.activation*2)+'.png')
+        image_path_1 = os.path.join(gender_path, 'ew8/'+args.au+'ew8_'+args.au+'.'+str(args.activation*2)+'.png')
 
 # choose index from 2 to inf
 def array_repeat(x, index):
@@ -123,24 +123,25 @@ for cut in range(5):
     dau_dface_light = torch.squeeze(darray_light * dfeature)
     dau_dface_dark = torch.squeeze(darray_dark * dfeature)
 
-    dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)
-    dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)
+    dau_dface_light = np.sum(dau_dface_light.numpy(), axis=0)/dau_dface_light.shape[0]
+    dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)/dau_dface_dark.shape[0]
 
+    dau_dface_light = array_repeat(dau_dface_light, 2**(cut+1))
+    dau_dface_dark = array_repeat(dau_dface_dark, 2**(cut+1))
 
     normalized_light = np.interp(dau_dface_light, (dau_dface_light.min(), dau_dface_light.max()), (0, 1))
     normalized_light = normalized_light - np.mean(normalized_light)
-    normalized_light[normalized_light < 0] = 0
-    normalized_light = array_repeat(normalized_light, 2**(cut+1))
+    #normalized_light[normalized_light < 0] = 0
     normalized_dark = np.interp(dau_dface_dark, (dau_dface_dark.min(), dau_dface_dark.max()), (0, 1))
     normalized_dark = normalized_dark - np.mean(normalized_dark)
-    normalized_dark[normalized_dark < 0] = 0
-    normalized_dark = array_repeat(normalized_dark, 2**(cut+1))
+    #normalized_dark[normalized_dark < 0] = 0
 
-    axs[0,cut].imshow(normalized_light, cmap='Greys')
+    axs[0,cut].imshow(dau_dface_light, cmap='Greys')
     axs[0,cut].set_title('hidden_state'+str(cut))
 
     #axs[0,1].imshow(normalized_dark, cmap='Greys')
     #axs[0,1].set_title('ddark_au / dface')
+    fig.colorbar(axs[0,cut].imshow(dau_dface_light, cmap='Greys'), ax=axs[0,cut])
 
     axs[1,cut].imshow(input_image_light+np.tile(normalized_light, (3,1,1)).transpose(1,2,0))
     #axs[1,1].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
