@@ -13,7 +13,7 @@ from FAUDataset import *
 # dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
 
 # sample running command: 
-# python derivative_func_facegen.py --race african --seed 82 --activation 5 --au 4
+# python derivative_func_facegen.py --race african --seed 82 --activation 5 --au 12
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
@@ -115,24 +115,27 @@ for cut in range(5):
     dau_dface_light = torch.squeeze(darray_light * dfeature)
     dau_dface_dark = torch.squeeze(darray_dark * dfeature)
 
-    dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)
-    dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)
+    dau_dface_light = np.sum(dau_dface_dark.numpy(), axis=0)/dau_dface_light.shape[0]
+    dau_dface_dark= np.sum(dau_dface_dark.numpy(), axis=0)/dau_dface_dark.shape[0]
 
+    dau_dface_light = array_repeat(dau_dface_light, 2**(cut+1))
+    dau_dface_dark = array_repeat(dau_dface_dark, 2**(cut+1))
 
     normalized_light = np.interp(dau_dface_light, (dau_dface_light.min(), dau_dface_light.max()), (0, 1))
     normalized_light = normalized_light - np.mean(normalized_light)
     #normalized_light[normalized_light < 0] = 0
-    normalized_light = array_repeat(normalized_light, 2**(cut+1))
     normalized_dark = np.interp(dau_dface_dark, (dau_dface_dark.min(), dau_dface_dark.max()), (0, 1))
     normalized_dark = normalized_dark - np.mean(normalized_dark)
     #normalized_dark[normalized_dark < 0] = 0
-    normalized_dark = array_repeat(normalized_dark, 2**(cut+1))
-
-    axs[0,cut].imshow(normalized_light, cmap='Greys')
-    axs[0,cut].set_title('hidden_state'+str(cut))
 
     #axs[0,cut].imshow(normalized_dark, cmap='Greys')
     #axs[0,cut].set_title('hidden_state'+str(cut))
+
+    ##############
+    axs[0,cut].imshow(dau_dface_light, cmap='Greys')
+    axs[0,cut].set_title('hidden_state'+str(cut))
+    fig.colorbar(axs[0,cut].imshow(dau_dface_light, cmap='Greys'), ax=axs[0,cut])
+    ##############
 
     axs[1,cut].imshow(input_image_light+np.tile(np.negative(normalized_light), (3,1,1)).transpose(1,2,0))
     #axs[1,cut].imshow(input_image_dark+np.tile(normalized_dark, (3,1,1)).transpose(1,2,0))
@@ -142,9 +145,6 @@ for cut in range(5):
         #axs[2,cut].imshow(input_image_dark)
     else:
         pass
-
-fig.colorbar(axs[0,cut].imshow(normalized_light, cmap='Greys'), ax=axs[0,:])
-fig.colorbar(axs[0,cut].imshow(normalized_light, cmap='Greys'), ax=axs[1,:])
 
 ##########################
 y = [0,1,2,3,4,5,6,7,8,9]
