@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
+# python train_facegen.py --seed 557 --dataset_root D:/Datasets/face_gen_single --resume D:/FAU_models/checkpoint_epoch_init.pth
 # python train_facegen.py --seed 1 --dataset_root D:/Datasets/face_gen_single --resume D:/FAU_models/models_r82/checkpoint_epoch49.pth
 # sampe bash command Mac: 
 # python train_facegen.py --seed 1 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
@@ -63,7 +64,7 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--test_set', '-t', default=['a', 'e'], type=list, 
+parser.add_argument('--test_set', '-t', default=['a', 'eb'], type=list, 
                     help='take in a list of skin color scale')
 parser.add_argument('--dataset_root', default='D:/Datasets/FAU', 
                     help='the root path of FAU Dataset')
