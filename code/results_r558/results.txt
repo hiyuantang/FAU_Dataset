@@ -1,4 +1,4 @@
-Train on fecegen 5 dark, test on facegen 5 light, alt
+Train on fecegen dark, test on facegen light, alt
 train_loss at epoch0: 0.011248609982430935
 train_mses at epoch0: [0.54572913 0.00560353 0.04110891 0.0182143  0.00110399 0.04253555
  0.00142675 0.00557939 0.00351531 0.00337793]
