@@ -58,7 +58,7 @@ def test_model(model):
     return loss, mses, maes
 
 parser = argparse.ArgumentParser(description='FAU Dataset Training & Testing')
-parser.add_argument('--fileName', default='test_559_facegen', type=str, help='directory name')
+parser.add_argument('--fileName', default='test_55_facegen', type=str, help='directory name')
 parser.add_argument('--epochs', default=50, type=int, help='number of epochs for training')
 parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
