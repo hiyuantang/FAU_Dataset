@@ -5,7 +5,7 @@ import json
 #This file will generate the labels for FAU Dataset
 #Once you have the datasets [European_Man] and [European_Woman], create a root directory and unzip the datasets in folder root/images before running the script. 
 #Sample bash command: 
-# python Facegen_CreateLabel.py -r /Volumes/Yuan-T7/Datasets/face_gen_single
+# python Facegen_CreateLabel.py -r /Volumes/Yuan-T7/Datasets/face_gen
 # python Facegen_CreateLabel.py -r D:/Datasets/face_gen_single
 #Sample label outcome for each image: 
 # {"PSPI": 0.2, "au4": 0.2, "au6": 0.0, "au7": 0.0, "au10": 0.0, "au12": 0.0, "au20": 0.0, "au25": 0.0, "au26": 0.0, "au43": 0.0}
@@ -63,19 +63,25 @@ for i in next(os.walk(image_dir))[1]:
             # 4em1_4.2.txt
             try:
                 image_name = z[0:-4]
-                label_file_name = image_name+'.txt'
-                modified_au_num = image_name[(image_name.index('_')+1):image_name.index('.')]
-                modified_au_intensity = float(image_name[(image_name.index('.')+1):])/10
-                
-                if not modified_au_num == '43':
-                    modified_au_intensity = modified_au_intensity * 5.
-                
-                content['au'+modified_au_num] = modified_au_intensity
-                PSPI_score = content['au4']+max(content['au6'], content['au7'])+max(content['au9'], content['au10'])+content['au43']
-                content['PSPI'] = PSPI_score
+                if image_name.startswith('._'):
+                    continue
+                else:
+                    label_file_name = image_name+'.txt'
+                    modified_au_num = image_name[(image_name.index('_')+1):image_name.index('.')]
+                    modified_au_intensity = float(image_name[(image_name.index('.')+1):])/10
+                    
+                    if not modified_au_num == '43':
+                        modified_au_intensity = modified_au_intensity * 5.
+                    
+                    content['au'+modified_au_num] = modified_au_intensity
+                    PSPI_score = content['au4']+max(content['au6'], content['au7'])+max(content['au9'], content['au10'])+content['au43']
+                    content['PSPI'] = PSPI_score
             except:
                 image_name = z[0:-4]
-                label_file_name = image_name+'.txt'
+                if image_name.startswith('._'):
+                    continue
+                else:
+                    label_file_name = image_name+'.txt'
             
             ######################
             # remove au9
