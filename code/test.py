@@ -13,7 +13,7 @@ import copy
 import random
 import argparse
 from vgg_face import *
-from facegenDataset_alt import *
+from facegenDataset import *
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
