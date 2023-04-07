@@ -19,9 +19,9 @@ plt.switch_backend('agg')
 
 # sampe bash command Windows: 
 # python test.py --dataset_root D:/Datasets/face_gen --resume D:/FAU_models/checkpoint_epoch_init.pth
-# python test.py --dataset_root D:/Datasets/face_gen --resume D:/FAU_models/models_r82/checkpoint_epoch49.pth
+# python test.py --dataset_root D:/Datasets/face_gen --resume D:/FAU_models/models_r559/checkpoint_epoch49.pth
 # sampe bash command Mac: 
-# python test.py --dataset_root /Volumes/Yuan-T7/Datasets/face_gen --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
+# python test.py --dataset_root /Volumes/Yuan-T7/Datasets/face_gen --resume /Volumes/Yuan-T7/FAU_models/models_r559/checkpoint_epoch49.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -58,15 +58,15 @@ def test_model(model):
     return loss, mses, maes
 
 parser = argparse.ArgumentParser(description='FAU Dataset Training & Testing')
-parser.add_argument('--fileName', default='test_0', type=str, help='directory name')
+parser.add_argument('--fileName', default='test_559_facegen', type=str, help='directory name')
 parser.add_argument('--epochs', default=50, type=int, help='number of epochs for training')
 parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--test_set', '-t', default=['a', 'eb'], type=list, 
+parser.add_argument('--test_set', '-t', default=['a', 'eb', 'e', 'aw'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--dataset_root', default='D:/Datasets/FAU', 
+parser.add_argument('--dataset_root', default='/Volumes/Yuan-T7/Datasets/FAU', 
                     help='the root path of FAU Dataset')
 parser.add_argument('--save_interval', default=10, type=int, 
                     help='define the interval of epochs to save model state')
@@ -78,12 +78,10 @@ print("Torchvision Version: ",torchvision.__version__)
 image_dir = os.path.join(args.dataset_root, 'images')
 label_dir = os.path.join(args.dataset_root, 'labels')
 
-if not os.path.isdir('./models_r' + str(args.seed)):
-        os.mkdir('./models_r' + str(args.seed))
-if not os.path.isdir('./results_r' + str(args.seed)):
-        os.mkdir('./results_r' + str(args.seed))
+if not os.path.isdir('./results_' + str(args.fileName)):
+        os.mkdir('./results_' + str(args.fileName))
 
-results_path = os.path.join('./results_r'+str(args.seed), 'results.txt')
+results_path = os.path.join('./results_'+str(args.fileName), 'results.txt')
 with open(results_path, 'x') as f:
     pass
 
@@ -109,15 +107,19 @@ test_subjects = np.sort(test_subjects)
 
 print('Test Sets: '+ str(test_subjects))
 
+# Detect if we have a GPU available
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+
 # Train the model
 model = VGG_16()
+model = model.to(device)
 set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
 model.fc8 = nn.Linear(num_ftrs, num_classes)
 if args.resume is None:
     pass
 else:
-    model.load_state_dict(torch.load(args.resume))
+    model.load_state_dict(torch.load(args.resume, map_location=device))
 
 test_dataset = facegenDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -125,11 +127,6 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, s
 print('Total Number of Test Sets: ' + str(test_dataset.__len__()))
 print('---------------Finished---------------')
 
-# Detect if we have a GPU available
-device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
-
-# Send the model to GPU
-model = model.to(device)
 params_to_update = model.parameters()
 print("Params to learn:")
 feature_extract = False
@@ -168,9 +165,9 @@ criterion = nn.MSELoss(reduction='none')
 test_loss, test_mses, test_maes = test_model(model)
 
 with open(results_path, 'a') as f:
-    f.write('test_loss at epoch'+': '+str(test_loss)+'\n')
-    f.write('test_mses at epoch'+': '+str(test_mses)+'\n')
-    f.write('test_maes at epoch'+': '+str(test_maes)+'\n')
+    f.write('test_loss'+': '+str(test_loss)+'\n')
+    f.write('test_mses'+': '+str(test_mses)+'\n')
+    f.write('test_maes'+': '+str(test_maes)+'\n')
     f.write('\n')
 
 print('Training complete')
