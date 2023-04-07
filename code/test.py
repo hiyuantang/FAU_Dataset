@@ -115,7 +115,7 @@ model = VGG_16()
 model = model.to(device)
 set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
-model.fc8 = nn.Linear(num_ftrs, num_classes)
+model.fc8 = nn.Linear(num_ftrs, num_classes).to(device)
 if args.resume is None:
     pass
 else:
