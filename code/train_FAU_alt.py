@@ -20,7 +20,7 @@ plt.switch_backend('agg')
 # sampe bash command Windows: 
 # python train_FAU_alt.py --seed 559 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
 # sampe bash command Mac: 
-# python train_facegen.py --seed 1 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
+# python train_facegen.py --seed 554 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
