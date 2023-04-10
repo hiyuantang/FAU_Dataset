@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train_FAU.py --seed 551 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
+# python train_FAU.py --seed 888 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
 # sampe bash command Mac: 
-# python train_facegen.py --seed 1 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
+# python train_FAU.py --seed 999 --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -63,7 +63,7 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--test_set', '-t', default=[1,2,3,4,5], type=list, 
+parser.add_argument('--test_set', '-t', default=[6,7,8,9,10], type=list, 
                     help='take in a list of skin color scale')
 parser.add_argument('--dataset_root', default='D:/Datasets/FAU', 
                     help='the root path of FAU Dataset')
@@ -149,15 +149,18 @@ for i in test_subjects:
 print('Train Sets: '+ str(train_subjects))
 print('Test Sets: '+ str(test_subjects))
 
+# Detect if we have a GPU available
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+
 # Train the model
-model = VGG_16()
+model = VGG_16().to(device)
 set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
-model.fc8 = nn.Linear(num_ftrs, num_classes)
+model.fc8 = nn.Linear(num_ftrs, num_classes).to(device)
 if args.resume is None:
     pass
 else:
-    model.load_state_dict(torch.load(args.resume))
+    model.load_state_dict(torch.load(args.resume, map_location=device))
 
 train_dataset = FAUDataset(args.dataset_root, subjects = train_subjects, transform=data_transforms['train'])
 test_dataset = FAUDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
@@ -167,9 +170,6 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, s
 print('Total Number of Train Sets: ' + str(train_dataset.__len__()))
 print('Total Number of Test Sets: ' + str(test_dataset.__len__()))
 print('---------------Finished---------------')
-
-# Detect if we have a GPU available
-device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 
 # Send the model to GPU
 model = model.to(device)
