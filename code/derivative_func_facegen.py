@@ -13,12 +13,12 @@ from FAUDataset import *
 # dAU7/Delta face change  as \sum dAU7/dfeatureact * Delta featureact/Delta face change 
 
 # sample running command: 
-# python derivative_func_facegen.py --race african --seed 82 --activation 5 --au 12
+# python derivative_func_facegen.py --race african --seed 557 --activation 5 --au 12
 
 parser = argparse.ArgumentParser(description='d AU# / d face change')
 parser.add_argument('--au', default='4', type=str, help='select an au number from [4,6,7,10,12,20,25,26,43]')
 parser.add_argument('--race', default='african', type=str, help='select a gender from [african, european]')
-parser.add_argument('--seed', default='66', type=str, help='select a random seed from [init, 16, 66]')
+parser.add_argument('--seed', default='557', type=str, help='select a random seed from [init, 55, etc.]')
 parser.add_argument('--activation', default=5, type=int, help='select an activation level from [1,2,3,4,5]')
 args = parser.parse_args()
 
