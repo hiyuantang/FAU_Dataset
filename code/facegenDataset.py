@@ -37,7 +37,7 @@ class facegenDataset(Dataset):
             count = 0
             for i in self.subjects:
                 for j in data:
-                    if ('\\'+i+'\\') or ('/'+i+'/') in j:
+                    if ('\\'+i+'\\') in j or ('/'+i+'/') in j:
                         target_item_dict[count] = j
                         count += 1
         label_path = target_item_dict[index]
