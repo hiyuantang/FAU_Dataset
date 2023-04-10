@@ -22,6 +22,9 @@ class FAUDataset(Dataset):
                 if j in self.subjects:
                     target_path = os.path.join(updated_path, j)
                     for _, _, files in os.walk(target_path):
+                        for z in files:
+                            if z.startswith('._'):
+                                files.remove(z)
                         count += len(files)
         return count
     
@@ -33,9 +36,11 @@ class FAUDataset(Dataset):
             count = 0
             for i in self.subjects:
                 for j in data:
-                    if ('\\'+i+'\\') in j:
+                    #######
+                    if ('\\'+i+'\\') in j or ('/'+i+'/') in j:
                         target_item_dict[count] = j
                         count += 1
+                    #######
         label_path = target_item_dict[index]
         image_path = label_path.replace('labels', 'images')
         image_path = image_path.replace('.txt', '.png')
