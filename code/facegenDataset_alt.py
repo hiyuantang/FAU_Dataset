@@ -37,7 +37,7 @@ class facegenDataset(Dataset):
             count = 0
             for i in self.subjects:
                 for j in data:
-                    if ('\\'+i+'\\') or ('/'+i+'/') in j:
+                    if ('\\'+i+'\\') in j or ('/'+i+'/') in j:
                         target_item_dict[count] = j
                         count += 1
         label_path = target_item_dict[index]
@@ -49,7 +49,7 @@ class facegenDataset(Dataset):
         image = torch.tensor(image[100:700, 50:650, 0:3])
         img_around = F.pad(image, (0,0,1,1,1,1), 'constant', 0)
         img_pos0 = F.pad(image, (0,0,2,0,2,0), 'constant', 0)
-        image = (img_around - img_pos0 + 1.0)/2.0
+        image = (img_around - img_pos0)/255.0
         image = image.permute(2,0,1)
         #######################
 
