@@ -49,7 +49,11 @@ class FAUDataset(Dataset):
         image = torch.tensor(image[200:1000, 850:1650,:])
         img_around = F.pad(image, (0,0,1,1,1,1), 'constant', 0)
         img_pos0 = F.pad(image, (0,0,2,0,2,0), 'constant', 0)
-        image = (img_around - img_pos0 + 1.0)/2.0
+        img_pos1 = F.pad(image, (0,0,0,2,0,2), 'constant', 0)
+        img_pos2 = F.pad(image, (0,0,0,2,2,0), 'constant', 0)
+        img_pos3 = F.pad(image, (0,0,2,0,0,2), 'constant', 0)
+        image = 4.0*img_around - img_pos0 - img_pos1 - img_pos2 - img_pos3
+        image = (image - image.min())/(image.max()-image.min())
         image = image.permute(2,0,1)
         #######################
 
