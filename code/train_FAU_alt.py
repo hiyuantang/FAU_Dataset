@@ -20,7 +20,7 @@ plt.switch_backend('agg')
 # sampe bash command Windows: 
 # python train_FAU_alt.py --seed 559 --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth
 # sampe bash command Mac: 
-# python train_facegen.py --seed 554 --dataset_root /Volumes/Yuan-T7/Datasets/face_gen_single --resume /Volumes/Yuan-T7/FAU_models/models_r82/checkpoint_epoch49.pth
+# python train_FAU_alt.py --seed 550 --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -149,15 +149,18 @@ for i in test_subjects:
 print('Train Sets: '+ str(train_subjects))
 print('Test Sets: '+ str(test_subjects))
 
+# Detect if we have a GPU available
+device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+
 # Train the model
-model = VGG_16()
+model = VGG_16().to(device)
 set_parameter_requires_grad(model, feature_extracting=False)
 num_ftrs = model.fc8.in_features
-model.fc8 = nn.Linear(num_ftrs, num_classes)
+model.fc8 = nn.Linear(num_ftrs, num_classes).to(device)
 if args.resume is None:
     pass
 else:
-    model.load_state_dict(torch.load(args.resume))
+    model.load_state_dict(torch.load(args.resume, map_location=device))
 
 train_dataset = FAUDataset(args.dataset_root, subjects = train_subjects, transform=data_transforms['train'])
 test_dataset = FAUDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
@@ -167,9 +170,6 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, s
 print('Total Number of Train Sets: ' + str(train_dataset.__len__()))
 print('Total Number of Test Sets: ' + str(test_dataset.__len__()))
 print('---------------Finished---------------')
-
-# Detect if we have a GPU available
-device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
 
 # Send the model to GPU
 model = model.to(device)
