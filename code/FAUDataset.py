@@ -1,17 +1,19 @@
 import os 
 import torch
 from torch.utils.data import Dataset
+import torch.nn.functional as F
 import cv2
 import json
 import numpy as np
 
 class FAUDataset(Dataset):
-    def __init__(self, root_dir, subjects, transform=None):
+    def __init__(self, root_dir, subjects, mode, transform=None):
         self.root_dir = root_dir
         self.images_dir = os.path.join(self.root_dir, 'images')
         self.labels_dir = os.path.join(self.root_dir, 'labels')
         self.summary_dir = os.path.join(self.labels_dir, 'summary.txt')
         self.subjects = np.array(subjects)
+        self.mode = mode
         self.transform = transform
 
     def __len__(self):
@@ -36,17 +38,32 @@ class FAUDataset(Dataset):
             count = 0
             for i in self.subjects:
                 for j in data:
-                    #######
                     if ('\\'+i+'\\') in j or ('/'+i+'/') in j:
                         target_item_dict[count] = j
                         count += 1
-                    #######
         label_path = target_item_dict[index]
         image_path = label_path.replace('labels', 'images')
         image_path = image_path.replace('.txt', '.png')
         image = cv2.imread(image_path)
+        #######################
         # image size: (1080, 1920, 3) --> (800, 800, 3)
-        image = image[200:1000, 850:1650,:]
+        image = torch.tensor(image[200:1000, 850:1650,:])
+
+        if self.mode == 0:
+            image = image.permute(2,0,1)
+        else:
+            img_around = F.pad(image, (0,0,1,1,1,1), 'constant', 0)
+            img_pos0 = F.pad(image, (0,0,2,0,2,0), 'constant', 0)
+            #img_pos1 = F.pad(image, (0,0,0,2,0,2), 'constant', 0)
+            #img_pos2 = F.pad(image, (0,0,0,2,2,0), 'constant', 0)
+            #img_pos3 = F.pad(image, (0,0,2,0,0,2), 'constant', 0)
+            if self.mode == 1:
+                image = img_around - img_pos0
+            else:
+                print('mode error')
+            image = (image - image.min())/(image.max()-image.min())
+            image = image.permute(2,0,1)
+
 
         with open(label_path) as f:
             data = json.load(f)
