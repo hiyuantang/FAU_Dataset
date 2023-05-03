@@ -7,12 +7,13 @@ import json
 import numpy as np
 
 class facegenDataset(Dataset):
-    def __init__(self, root_dir, subjects, transform=None):
+    def __init__(self, root_dir, subjects, mode, transform=None):
         self.root_dir = root_dir
         self.images_dir = os.path.join(self.root_dir, 'images')
         self.labels_dir = os.path.join(self.root_dir, 'labels')
         self.summary_dir = os.path.join(self.labels_dir, 'summary.txt')
         self.subjects = np.array(subjects)
+        self.mode = mode
         self.transform = transform
 
     def __len__(self):
@@ -44,8 +45,45 @@ class facegenDataset(Dataset):
         image_path = label_path.replace('labels', 'images')
         image_path = image_path.replace('.txt', '.png')
         image = cv2.imread(image_path)
+        #######################
         # image size: (1080, 1920, 3) --> (800, 800, 3)
-        image = image[100:700, 50:650, :]
+        image = torch.tensor(image[100:700, 50:650, 0:3])
+
+        if self.mode == 0:
+            image = image.permute(2,0,1)
+        else:
+            img_around = F.pad(image, (0,0,1,1,1,1), 'constant', 0)
+            #img_pos0 = F.pad(image, (0,0,2,0,2,0), 'constant', 0)
+            img_pos1 = F.pad(image, (0,0,0,2,0,2), 'constant', 0)
+            #img_pos2 = F.pad(image, (0,0,0,2,2,0), 'constant', 0)
+            #img_pos3 = F.pad(image, (0,0,2,0,0,2), 'constant', 0)
+            if self.mode == 1:
+                image = img_around - img_pos1
+            elif self.mode == 2:
+                image = img_around - img_pos1
+                image = (image - image.min())/(image.max()-image.min())
+                image_re = 1.0 / (image + 1.0)
+                image = image + image_re
+            elif self.mode == 3:
+                image = img_around - img_pos1
+                image = (image - image.min())/(image.max()-image.min())
+                image = np.arctan(image - 0.5)
+                image = np.abs(image)
+            elif self.mode == 4:
+                kernel = np.array([[0, -1, 0],
+                                    [-1, 5,-1],
+                                    [0, -1, 0]])
+                image_sharp = cv2.filter2D(src=image.numpy(), ddepth=-1, kernel=kernel)
+                image_sharp = torch.tensor(image_sharp)
+                image_sharp = (image_sharp - image_sharp.min())/(image_sharp.max()-image_sharp.min())
+                img_around = F.pad(image_sharp, (0,0,1,1,1,1), 'constant', 0)
+                img_pos0 = F.pad(image_sharp, (0,0,0,2,2,0), 'constant', 0)
+                image = img_around - img_pos0
+            else:
+                print('mode error')
+            image = (image - image.min())/(image.max()-image.min())
+            image = image.permute(2,0,1)
+            #######################
 
         with open(label_path) as f:
             data = json.load(f)
