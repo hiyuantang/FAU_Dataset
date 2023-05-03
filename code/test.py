@@ -5,12 +5,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from torchvision import datasets, models, transforms
+from torchvision import transforms
 import numpy as np
 import time
 import os
-import copy
-import random
 import argparse
 from vgg_face import *
 from facegenDataset import *
@@ -71,8 +69,8 @@ parser.add_argument('--test_set', '-t', default=['a', 'eb', 'e', 'aw'], type=lis
                     help='take in a list of skin color scale')
 parser.add_argument('--dataset_root', default='/Volumes/Yuan-T7/Datasets/FAU', 
                     help='the root path of FAU Dataset')
-parser.add_argument('--save_interval', default=10, type=int, 
-                    help='define the interval of epochs to save model state')
+parser.add_argument('--mode', default=0, type=int, 
+                    help='define the data pre-transformation mode: mode 0 is non-transformed')
 args = parser.parse_args()
 
 print("PyTorch Version: ",torch.__version__)
@@ -124,7 +122,7 @@ if args.resume is None:
 else:
     model.load_state_dict(torch.load(args.resume, map_location=device))
 
-test_dataset = facegenDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'], mode=0)
+test_dataset = facegenDataset(args.dataset_root, subjects = test_subjects, mode = args.mode, transform=data_transforms['test'])
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 print('Total Number of Test Sets: ' + str(test_dataset.__len__()))
