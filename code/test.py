@@ -18,10 +18,10 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python test.py --dataset_root D:/Datasets/face_gen --resume D:/FAU_models/checkpoint_epoch_init.pth
-# python test.py --dataset_root D:/Datasets/face_gen --resume D:/FAU_models/models_r55/checkpoint_epoch49.pth
+# python test.py --dataset_root D:/Datasets/facegen --resume D:/FAU_models/checkpoint_epoch_init.pth
+# python test.py --dataset_root D:/Datasets/facegen --resume D:/FAU_models/models_r55/checkpoint_epoch49.pth
 # sampe bash command Mac: 
-# python test.py --dataset_root /Volumes/Yuan-T7/Datasets/face_gen --resume /Volumes/Yuan-T7/FAU_models/models_r55/checkpoint_epoch49.pth
+# python test.py --dataset_root /Volumes/Yuan-T7/Datasets/facegen --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -34,6 +34,7 @@ def test_model(model):
         running_pred_label = np.empty((0,20))
             # Iterate over data.
         for images, labels in test_loader:
+            since = time.time()
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
@@ -43,6 +44,8 @@ def test_model(model):
             running_loss += loss_batch_mean.item()
 
             outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
+            time_elapsed = time.time() - since
+            print(time_elapsed)
             running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
         
         pred_test = running_pred_label[:,0:10]
@@ -121,7 +124,7 @@ if args.resume is None:
 else:
     model.load_state_dict(torch.load(args.resume, map_location=device))
 
-test_dataset = facegenDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'])
+test_dataset = facegenDataset(args.dataset_root, subjects = test_subjects, transform=data_transforms['test'], mode=0)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 print('Total Number of Test Sets: ' + str(test_dataset.__len__()))
