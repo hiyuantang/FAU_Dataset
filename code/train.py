@@ -9,7 +9,6 @@ from torchvision import datasets, models, transforms
 import numpy as np
 import time
 import os
-import copy
 import random
 import argparse
 from vgg_face import *
