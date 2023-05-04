@@ -3,13 +3,8 @@ sys.path.append('./code')
 import argparse
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torchvision
-from torchvision import datasets, models, transforms
+from torchvision import transforms
 import numpy as np
-import time
-import os
-import random
 import argparse
 from vgg_face import *
 import matplotlib.pyplot as plt
@@ -26,11 +21,16 @@ def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
         param.requires_grad = False if feature_extracting else True
 
-def test_model(model, crop_frame, device, criterion, batch_size):
+def test_model(model, crop_frame, device):
     model.eval()
     with torch.no_grad():
-        input = crop_frame.to(device)
-        output = model(input)
+        crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2RGB)
+        crop_frame = cv2.resize(crop_frame, (224, 224))
+        crop_frame = crop_frame / 255.0
+        crop_frame = np.transpose(crop_frame, (2, 0, 1))
+        crop_frame = np.expand_dims(crop_frame, axis=0)  # add batch dimension
+        crop_frame = torch.from_numpy(crop_frame).float()
+        output = model(crop_frame)
         output = output * torch.FloatTensor([16] + [5]*9).to(device)
     return output
 
@@ -50,12 +50,8 @@ def main():
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
-                #transforms.Normalize([0.3873985 , 0.42637664, 0.53720075], [0.2046528 , 0.19909547, 0.19015081])
             ])
         }
-
-    # Setup the loss fxn
-    criterion = nn.MSELoss(reduction='none')
 
 
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -74,13 +70,15 @@ def main():
         for (x, y, w, h) in faces:
             cv2.rectangle(frame_flip, (x, y), (x+w, y+h), (255, 0, 0), 2)
             crop_frame = frame_flip[y:y+h, x:x+w]
-        try: 
-            cv2.imshow('face_cap', crop_frame)
-        except:
-            cv2.imshow('face_cap', frame_flip)
+
+        cv2.imshow('face_cap', frame_flip)
         
         # feed the frame into the model
-        output = test_model(model, crop_frame, device, criterion, batch_size=1)
+        try: 
+            output = test_model(model, crop_frame, device)
+            print(output)
+        except:
+            pass
 
         # Press 'Q' to quit camera
         if cv2.waitKey(1) == ord('q'):
