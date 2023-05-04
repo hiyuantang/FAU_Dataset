@@ -160,7 +160,6 @@ def main():
         pass
     else:
         model.load_state_dict(torch.load(args.resume, map_location=device))
-    model = model.to(device)
 
     # load data
     if 'FAU' in args.dataset_root:
