@@ -12,6 +12,11 @@ from facegenDataset import *
 from FAUDataset import *
 plt.switch_backend('agg')
 
+# to download face crop network, please go to:
+# https://github.com/opencv/opencv/tree/master/data/haarcascades 
+# to download vgg_face model .pth file, please go to:
+# https://drive.google.com/drive/folders/1wzqoBauX746f9YxpFrmf8TUlUhfb8vDN?usp=share_link
+
 parser = argparse.ArgumentParser(description='DEMO')
 parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth', type=str, 
                     help='transfer training by defining the path of stored weights')
@@ -69,24 +74,17 @@ def main():
             output = test_model(model, crop_frame, device)
             output = output.flatten()
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 1
-            #thickness = 2
-            text_size, _ = cv2.getTextSize(output_text, font, font_scale, 2)
-            height, width, channels = frame_flip.shape
-            text_x = int((width - text_size[0]) / 2)
-            text_y = height - text_size[1] - 10
-            cv2.putText(frame_flip, output_text, (text_x, text_y), font, font_scale, (255, 255, 255), 2)
         except:
             output_text = 'No Face Is Detected'
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 1
-            #thickness = 2
-            text_size, _ = cv2.getTextSize(output_text, font, font_scale, 2)
-            height, width, channels = frame_flip.shape
-            text_x = int((width - text_size[0]) / 2)
-            text_y = height - text_size[1] - 10
-            cv2.putText(frame_flip, output_text, (text_x, text_y), font, font_scale, (255, 255, 255), 2)
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+        #thickness = 2
+        text_size, _ = cv2.getTextSize(output_text, font, font_scale, 2)
+        height, width, channels = frame_flip.shape
+        text_x = int((width - text_size[0]) / 2)
+        text_y = height - text_size[1] - 10
+        cv2.putText(frame_flip, output_text, (text_x, text_y), font, font_scale, (255, 255, 255), 2)
 
         cv2.imshow('face_cap', frame_flip)
 
