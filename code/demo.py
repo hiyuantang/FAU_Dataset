@@ -17,11 +17,11 @@ plt.switch_backend('agg')
 # to download vgg_face model .pth file, please go to:
 # https://drive.google.com/drive/folders/1wzqoBauX746f9YxpFrmf8TUlUhfb8vDN?usp=share_link
 # model path:
-# /Volumes/Yuan-T7/GitHub/FAU_Dataset/code/models_r10/checkpoint_epoch69.pth
+# /Volumes/Yuan-T7/FAU_models/models_r10/checkpoint_epoch69.pth
 # /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 parser = argparse.ArgumentParser(description='DEMO')
-parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/GitHub/FAU_Dataset/code/models_r10/checkpoint_epoch69.pth', type=str, 
+parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r10/checkpoint_epoch69.pth', type=str, 
                     help='transfer training by defining the path of stored weights')
 args = parser.parse_args()
 
