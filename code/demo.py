@@ -8,8 +8,6 @@ import numpy as np
 import argparse
 from vgg_face import *
 import matplotlib.pyplot as plt
-from facegenDataset import *
-from FAUDataset import *
 plt.switch_backend('agg')
 
 # to download face crop network, please go to:
@@ -23,6 +21,8 @@ plt.switch_backend('agg')
 parser = argparse.ArgumentParser(description='DEMO')
 parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r10/checkpoint_epoch69.pth', type=str, 
                     help='transfer training by defining the path of stored weights')
+parser.add_argument('--scale', '-s', default=100, type=int, 
+                    help='determine the face crop size')
 args = parser.parse_args()
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -69,8 +69,8 @@ def main():
         frame_gray = cv2.cvtColor(frame_flip, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(frame_gray, 1.1, 6) 
         for (x, y, w, h) in faces:
-            cv2.rectangle(frame_flip, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            crop_frame = frame_flip[y:y+h, x:x+w]
+            cv2.rectangle(frame_flip, (x-args.scale, y-args.scale), (x+w+args.scale*2, y+h+args.scale*2), (255, 0, 0), 2)
+            crop_frame = frame_flip[y-args.scale:y+h+args.scale*2, x-args.scale:x+w+args.scale*2]
         
         # feed the frame into the model
         try: 
