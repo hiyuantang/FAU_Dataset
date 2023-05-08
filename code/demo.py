@@ -41,7 +41,7 @@ def centercrop_opencv(image, size):
 def test_model(model, crop_frame, device):
     model.eval()
     with torch.no_grad():
-        crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2RGB)
+        #crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2RGB)
         crop_frame = cv2.resize(crop_frame, (256, 256))
         crop_frame = centercrop_opencv(crop_frame, 224)
         crop_frame = crop_frame / 255.0
@@ -53,13 +53,13 @@ def test_model(model, crop_frame, device):
     return output
 
 def plot_bar(au_scores, title):
-    labels = ['PSPI', 'AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
-    values = au_scores
-    fig, ax = plt.subplots(figsize=(10, 8))
+    labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
+    values = au_scores[1:]
+    fig, ax = plt.subplots(figsize=(6, 10.8))
     ax.barh(labels, values)
-    ax.set_xlabel('Values')
-    ax.set_ylabel('Labels')
-    ax.set_title(title)
+    #ax.set_xlabel('Values')
+    #ax.set_ylabel('Labels')
+    ax.set_title(title + 'PSPI {:.2f}/16'.format(au_scores[0]))
     ax.set_xlim([0, 5])
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
@@ -103,7 +103,7 @@ def main():
 
     while(True):
         ret, frame = cap.read()
-        
+    
         # mirror the video
         frame_flip = cv2.flip(frame,1)
         
@@ -123,7 +123,7 @@ def main():
             output_plot = plot_bar(output_cpu, cap_info)
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
         except Exception as error:
-            output_plot = canvas = np.zeros((1000, 600, 3), dtype=np.uint8)
+            output_plot = canvas = np.ones((1000, 800, 3), dtype=np.uint8)*255
             output_text = str(error)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
