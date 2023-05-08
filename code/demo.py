@@ -52,14 +52,15 @@ def test_model(model, crop_frame, device):
         output = output * torch.FloatTensor([16] + [5]*9).to(device)
     return output
 
-def plot_bar(au_scores):
-    labels = ['PSPI', 'AU4', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43',]
-    au_scores = [10, 24, 36, 12, 8]
-    fig, ax = plt.subplots(figsize=(8, 6))
+def plot_bar(au_scores, title):
+    labels = ['PSPI', 'AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
+    values = au_scores
+    fig, ax = plt.subplots(figsize=(10, 8))
     ax.barh(labels, values)
     ax.set_xlabel('Values')
     ax.set_ylabel('Labels')
-    #ax.set_title('')
+    ax.set_title(title)
+    ax.set_xlim([0, 5])
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
     plot = np.array(canvas.renderer.buffer_rgba())
@@ -71,8 +72,8 @@ def adaptive_canvas(image_left, image_right):
     canvas_h = max(h_l, h_r)
     canvas_w = w_l+w_r
     canvas = np.zeros((canvas_h, canvas_w, 3), dtype=np.uint8)
-    canvas[:h_l, :w_l, :] = image_left
-    canvas[:h_r, w_l:, :] = image_right
+    canvas[:h_l, :w_l, :] = image_left[:,:,:3]
+    canvas[:h_r, w_l:, :] = image_right[:,:,:3]
     return canvas
 
 def main():
@@ -93,7 +94,13 @@ def main():
     # set up a camera window
     cv2.namedWindow('face_cap', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('face_cap', 1200, 900)
+    
     cap = cv2.VideoCapture(0)
+    cap_h = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cap_w = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    cap_info = '({}*{}, fps {})'.format(cap_h, cap_w, fps)
+
     while(True):
         ret, frame = cap.read()
         
@@ -112,11 +119,12 @@ def main():
         try: 
             output = test_model(model, crop_frame, device)
             output = output.flatten()
-            output_plot = plot_bar(output)
+            output_cpu = torch.Tensor.cpu(output).numpy()
+            output_plot = plot_bar(output_cpu, cap_info)
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
-        except:
-            output_plot = canvas = np.zeros((800, 600, 3), dtype=np.uint8)
-            output_text = 'No Face Is Detected'
+        except Exception as error:
+            output_plot = canvas = np.zeros((1000, 600, 3), dtype=np.uint8)
+            output_text = str(error)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
