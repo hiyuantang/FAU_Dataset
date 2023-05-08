@@ -95,7 +95,7 @@ def main():
 
     # set up a camera window
     cv2.namedWindow('face_cap', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('face_cap', 1500, 800)
+    cv2.resizeWindow('face_cap', 1500, 600)
     
     cap = cv2.VideoCapture(0)
     cap_h = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -125,7 +125,7 @@ def main():
             output_plot = plot_bar(output_cpu, cap_info)
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
         except Exception as error:
-            output_plot = canvas = np.ones((1000, 800, 3), dtype=np.uint8)*255
+            output_plot = canvas = np.ones((1080, 1000, 3), dtype=np.uint8)*255
             output_text = str(error)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
