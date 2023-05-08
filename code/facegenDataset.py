@@ -45,6 +45,7 @@ class facegenDataset(Dataset):
         image_path = label_path.replace('labels', 'images')
         image_path = image_path.replace('.txt', '.png')
         image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         #######################
         # image size: (1080, 1920, 3) --> (800, 800, 3)
         image = torch.tensor(image[100:700, 50:650, 0:3])
