@@ -21,7 +21,7 @@ plt.switch_backend('agg')
 
 parser = argparse.ArgumentParser(description='DEMO')
 parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r10/checkpoint_epoch69.pth', type=str, 
-                    help='transfer training by defining the path of stored weights')
+                    help='the path of model')
 parser.add_argument('--scale', '-s', default=80, type=int, 
                     help='determine the face crop size')
 args = parser.parse_args()
