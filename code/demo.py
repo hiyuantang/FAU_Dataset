@@ -41,7 +41,7 @@ def centercrop_opencv(image, size):
 def test_model(model, crop_frame, device):
     model.eval()
     with torch.no_grad():
-        #crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2RGB)
+        crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2RGB)
         crop_frame = cv2.resize(crop_frame, (256, 256))
         crop_frame = centercrop_opencv(crop_frame, 224)
         crop_frame = crop_frame / 255.0
@@ -55,11 +55,11 @@ def test_model(model, crop_frame, device):
 def plot_bar(au_scores, title):
     labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
     values = au_scores[1:]
-    fig, ax = plt.subplots(figsize=(6, 10.8))
+    fig, ax = plt.subplots(figsize=(10, 10.8))
     ax.barh(labels, values)
     #ax.set_xlabel('Values')
     #ax.set_ylabel('Labels')
-    ax.set_title(title + 'PSPI {:.2f}/16'.format(au_scores[0]))
+    ax.set_title(title + ' PSPI {:.2f}/16'.format(au_scores[0]), fontsize=20)
     ax.set_xlim([0, 5])
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
@@ -93,7 +93,7 @@ def main():
 
     # set up a camera window
     cv2.namedWindow('face_cap', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('face_cap', 1200, 900)
+    cv2.resizeWindow('face_cap', 1500, 800)
     
     cap = cv2.VideoCapture(0)
     cap_h = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
