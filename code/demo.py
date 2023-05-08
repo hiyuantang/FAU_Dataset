@@ -113,7 +113,7 @@ def main():
         for (x, y, w, h) in faces:
             h = w
             cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 0, 0), 4)
-            crop_frame = frame_flip[y-args.scale:y+h+args.scale*2, x-args.scale:x+w+args.scale*2]
+            crop_frame = frame_flip[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
         
         # feed the frame into the model
         try: 
