@@ -8,6 +8,7 @@ import numpy as np
 import argparse
 from vgg_face import *
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 plt.switch_backend('agg')
 
 # to download face crop network, please go to:
@@ -51,6 +52,29 @@ def test_model(model, crop_frame, device):
         output = output * torch.FloatTensor([16] + [5]*9).to(device)
     return output
 
+def plot_bar(au_scores):
+    labels = ['PSPI', 'AU4', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43',]
+    au_scores = [10, 24, 36, 12, 8]
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.barh(labels, values)
+    ax.set_xlabel('Values')
+    ax.set_ylabel('Labels')
+    #ax.set_title('')
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    plot = np.array(canvas.renderer.buffer_rgba())
+    return plot
+
+def adaptive_canvas(image_left, image_right):
+    h_l, w_l, _ = image_left.shape
+    h_r, w_r, _ = image_right.shape
+    canvas_h = max(h_l, h_r)
+    canvas_w = w_l+w_r
+    canvas = np.zeros((canvas_h, canvas_w, 3), dtype=np.uint8)
+    canvas[:h_l, :w_l, :] = image_left
+    canvas[:h_r, w_l:, :] = image_right
+    return canvas
+
 def main():
     # add DL model
     num_classes = 10
@@ -88,8 +112,10 @@ def main():
         try: 
             output = test_model(model, crop_frame, device)
             output = output.flatten()
+            output_plot = plot_bar(output)
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
         except:
+            output_plot = canvas = np.zeros((800, 600, 3), dtype=np.uint8)
             output_text = 'No Face Is Detected'
         
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -101,7 +127,9 @@ def main():
         text_y = height - text_size[1] - 10
         cv2.putText(frame_flip, output_text, (text_x, text_y), font, font_scale, (255, 255, 255), 2)
 
-        cv2.imshow('face_cap', frame_flip)
+        # dispay canvas
+        canvas = adaptive_canvas(frame_flip, output_plot)
+        cv2.imshow('face_cap', canvas)
 
         # Press 'Q' to quit camera
         if cv2.waitKey(1) == ord('q'):
