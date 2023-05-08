@@ -24,6 +24,8 @@ parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models
                     help='the path of model')
 parser.add_argument('--scale', '-s', default=80, type=int, 
                     help='determine the face crop size')
+parser.add_argument('--record', '-r', default='off', type=str, 
+                    help='determine if recording is on or off')
 args = parser.parse_args()
 
 def set_parameter_requires_grad(model, feature_extracting):
