@@ -28,6 +28,8 @@ parser.add_argument('--record', '-r', default='off', type=str,
                     help='determine if recording is on or off')
 args = parser.parse_args()
 
+
+
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
         param.requires_grad = False if feature_extracting else True
