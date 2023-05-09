@@ -51,7 +51,7 @@ def test_model(model, crop_frame, device):
         crop_frame = np.expand_dims(crop_frame, axis=0)  # add batch dimension
         crop_frame = torch.from_numpy(crop_frame).float().to(device)
         output = model(crop_frame)
-        output = output * torch.FloatTensor([16] + [5]*9).to(device)
+        output = output * torch.FloatTensor([16] + [5]*8 + [25]).to(device)
     return output
 
 def plot_bar(au_scores, title):
