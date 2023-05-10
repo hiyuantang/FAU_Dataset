@@ -25,13 +25,11 @@ parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models
                     help='the path of model')
 parser.add_argument('--scale', '-s', default=80, type=int, 
                     help='determine the face crop size')
-parser.add_argument('--record', '-r', default='off', type=str, 
+parser.add_argument('--record', '-r', default='off', choices=['on', 'off'], type=str, 
                     help='determine if recording is on or off')
 parser.add_argument('--record_dir', '-d', default='record_0', type=str, 
                     help='define the directory name for video save')
 args = parser.parse_args()
-
-
 
 def set_parameter_requires_grad(model, feature_extracting):
     for param in model.parameters():
@@ -103,10 +101,10 @@ def main():
     cv2.resizeWindow('face_cap', 1500, 600)
     
     cap = cv2.VideoCapture(0)
-    cap_h = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    cap_w = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    cap_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cap_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
-    cap_info = '({}*{}, fps {})'.format(cap_h, cap_w, fps)
+    cap_info = '({}*{}, fps {})'.format(cap_w, cap_h, fps)
 
     # create directory for 
     if args.record == 'on':
@@ -114,9 +112,9 @@ def main():
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
+    save_count = 0
     while(True):
         ret, frame = cap.read()
-        pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
     
         # mirror the video
         frame_flip = cv2.flip(frame,1)
@@ -128,13 +126,6 @@ def main():
             h = w
             cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 0, 0), 4)
             crop_frame = frame_flip[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
-
-            # save video option
-            if args.record == 'on':
-                filename = save_path + str(pos_frame) + '.png'
-                cv2.imwrite(filename, crop_frame)
-            else:
-                pass
         
         # feed the frame into the model
         try: 
@@ -143,17 +134,26 @@ def main():
             output_cpu = torch.Tensor.cpu(output).numpy()
             output_plot = plot_bar(output_cpu, cap_info)
             output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
+
+            # save video option
+            if args.record == 'on':
+                filename = save_path + str(save_count) + '.png'
+                cv2.imwrite(filename, crop_frame)
+                save_count += 1
+            else:
+                pass
+
         except Exception as error:
             output_plot = canvas = np.ones((1080, 1000, 3), dtype=np.uint8)*255
             output_text = str(error)
         
+        # print AU info at the bottom of each frame
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
         #thickness = 2
         text_size, _ = cv2.getTextSize(output_text, font, font_scale, 2)
-        height, width, channels = frame_flip.shape
-        text_x = int((width - text_size[0]) / 2)
-        text_y = height - text_size[1] - 10
+        text_x = int((cap_w - text_size[0]) / 2)
+        text_y = cap_h - text_size[1] - 10
         cv2.putText(frame_flip, output_text, (text_x, text_y), font, font_scale, (255, 255, 255), 2)
 
         # dispay canvas
