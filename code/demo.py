@@ -1,6 +1,7 @@
 import sys
 sys.path.append('./code')
 import argparse
+import os
 import cv2
 import torch
 import torch.nn as nn
@@ -26,6 +27,8 @@ parser.add_argument('--scale', '-s', default=80, type=int,
                     help='determine the face crop size')
 parser.add_argument('--record', '-r', default='off', type=str, 
                     help='determine if recording is on or off')
+parser.add_argument('--record_dir', '-d', default='record_0', type=str, 
+                    help='define the directory name for video save')
 args = parser.parse_args()
 
 
@@ -105,8 +108,15 @@ def main():
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     cap_info = '({}*{}, fps {})'.format(cap_h, cap_w, fps)
 
+    # create directory for 
+    if args.record == 'on':
+        save_path = './{}/'.format(args.record_dir)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
     while(True):
         ret, frame = cap.read()
+        pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
     
         # mirror the video
         frame_flip = cv2.flip(frame,1)
@@ -118,6 +128,13 @@ def main():
             h = w
             cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 0, 0), 4)
             crop_frame = frame_flip[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
+
+            # save video option
+            if args.record == 'on':
+                filename = save_path + str(pos_frame) + '.png'
+                cv2.imwrite(filename, crop_frame)
+            else:
+                pass
         
         # feed the frame into the model
         try: 
