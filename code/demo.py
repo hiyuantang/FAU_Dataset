@@ -59,12 +59,11 @@ def test_model(model, crop_frame, device):
 
 def plot_bar(au_scores, title):
     #labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
-    labels = ['Brow Lowerer', 'Cheek Raiser', 'Lid Tightener', 'Upper Lip Raiser', 'Lip Corner Puller', 'Lip Stretcher', 'Lips Part', 'Jaw Drop', 'Eyes Closed']
+    labels = ['Brow\nLowerer', 'Cheek\nRaiser', 'Lid\nTightener', 'Upper Lip\nRaiser', 'Lip Corner\nPuller', 'Lip\nStretcher', 'Lips\nPart', 'Jaw\nDrop', 'Eyes\nClosed']
     values = au_scores[1:]
     fig, ax = plt.subplots(figsize=(10, 10.8))
     ax.barh(labels, values)
-    #ax.set_xlabel('Values')
-    #ax.set_ylabel('Labels')
+    ax.tick_params(axis='both', labelsize=15)
     ax.set_title(title + ' PSPI {:.2f}/16'.format(au_scores[0]), fontsize=20)
     ax.set_xlim([0, 5])
     canvas = FigureCanvasAgg(fig)
