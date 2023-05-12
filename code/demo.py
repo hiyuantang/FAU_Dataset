@@ -58,7 +58,8 @@ def test_model(model, crop_frame, device):
     return output
 
 def plot_bar(au_scores, title):
-    labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
+    #labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
+    labels = ['Brow Lowerer', 'Cheek Raiser', 'Lid Tightener', 'Upper Lip Raiser', 'Lip Corner Puller', 'Lip Stretcher', 'Lips Part', 'Jaw Drop', 'Eyes Closed']
     values = au_scores[1:]
     fig, ax = plt.subplots(figsize=(10, 10.8))
     ax.barh(labels, values)
