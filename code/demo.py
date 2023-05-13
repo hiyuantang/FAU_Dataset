@@ -30,7 +30,7 @@ parser.add_argument('--record', '-r', default='off', choices=['on', 'off'], type
 parser.add_argument('--record_dir', '-d', default='record_0', type=str, 
                     help='define the directory name for video save')
 parser.add_argument('--sampling_rate', default=1, choices=[1, 2, 3, 4, 5], type=int, 
-                    help='determine the speed of samples taken. larger the value, lower the speed. if using a low-end device, use large value')
+                    help='determine the speed of samples fed into network. larger the value, lower the speed. if using a low-end device, use large value')
 args = parser.parse_args()
 
 def set_parameter_requires_grad(model, feature_extracting):
