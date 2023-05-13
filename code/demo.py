@@ -29,6 +29,8 @@ parser.add_argument('--record', '-r', default='off', choices=['on', 'off'], type
                     help='determine if recording is on or off')
 parser.add_argument('--record_dir', '-d', default='record_0', type=str, 
                     help='define the directory name for video save')
+parser.add_argument('--rounded', default=True, type=bool, choices=[True, False], 
+                    help='define if facial detection indicator will be rounded or regular square')
 parser.add_argument('--sampling_rate', default=1, choices=[1, 2, 3, 4, 5], type=int, 
                     help='determine the speed of samples fed into network. larger the value, lower the speed. if using a low-end device, use large value')
 args = parser.parse_args()
@@ -74,6 +76,13 @@ def plot_bar(au_scores, title):
     canvas.draw()
     plot = np.array(canvas.renderer.buffer_rgba())
     return plot
+
+def rounded_rectangle(image, x, y, w, h, radius, thickness):
+    cv2.ellipse(image, (x + radius, y + radius), (radius, radius), 180, 0, 90, (51,255,255), thickness)
+    cv2.ellipse(image, (x + w - radius, y + radius), (radius, radius), 270, 0, 90, (51,255,255), thickness)
+    cv2.ellipse(image, (x + radius, y + h - radius), (radius, radius), 90, 0, 90, (51,255,255), thickness)
+    cv2.ellipse(image, (x + w - radius, y + h - radius), (radius, radius), 0, 0, 90, (51,255,255), thickness)
+    return image
 
 def adaptive_canvas(image_left, image_right):
     h_l, w_l, _ = image_left.shape
@@ -129,7 +138,11 @@ def main():
         faces = face_cascade.detectMultiScale(frame_gray, 1.1, 6) 
         for (x, y, w, h) in faces:
             h = w
-            cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 0, 0), 4)
+            if args.rounded:
+                frame_flip = rounded_rectangle(frame_flip, x, y, w, h, 100, 20)
+            else: 
+                cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 0, 0), 4)
+            frame_flip = rounded_rectangle(frame_flip, x, y, w, h, 100, 10)
             crop_frame = frame_flip[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
         
         # feed the frame into the model
