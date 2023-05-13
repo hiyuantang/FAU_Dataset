@@ -29,6 +29,8 @@ parser.add_argument('--record', '-r', default='off', choices=['on', 'off'], type
                     help='determine if recording is on or off')
 parser.add_argument('--record_dir', '-d', default='record_0', type=str, 
                     help='define the directory name for video save')
+parser.add_argument('--sampling_rate', default=1, choices=[1, 2, 3, 4, 5], type=int, 
+                    help='determine the speed of samples taken. larger the value, lower the speed. if using a low-end device, use large value')
 args = parser.parse_args()
 
 def set_parameter_requires_grad(model, feature_extracting):
@@ -103,6 +105,7 @@ def main():
     cv2.resizeWindow('face_cap', 1500, 600)
     
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
     cap_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     cap_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -131,11 +134,12 @@ def main():
         
         # feed the frame into the model
         try: 
-            output = test_model(model, crop_frame, device)
-            output = output.flatten()
-            output_cpu = torch.Tensor.cpu(output).numpy()
-            output_plot = plot_bar(output_cpu, cap_info)
-            output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
+            if save_count % args.sampling_rate == 0:
+                output = test_model(model, crop_frame, device)
+                output = output.flatten()
+                output_cpu = torch.Tensor.cpu(output).numpy()
+                output_plot = plot_bar(output_cpu, cap_info)
+                output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
 
             # save video option
             if args.record == 'on':
