@@ -77,6 +77,7 @@ def plot_bar(au_scores, title):
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
     plot = np.array(canvas.renderer.buffer_rgba())
+    plot = cv2.cvtColor(plot, cv2.COLOR_RGB2BGR)
     return plot
 
 def rounded_rectangle(image, x, y, w, h, radius, thickness):
