@@ -21,7 +21,7 @@ plt.switch_backend('agg')
 # /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 parser = argparse.ArgumentParser(description='DEMO')
-parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r10/checkpoint_epoch69.pth', type=str, 
+parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69.pth', type=str, 
                     help='the path of model')
 parser.add_argument('--scale', '-s', default=80, type=int, 
                     help='determine the face crop size')
@@ -60,17 +60,21 @@ def test_model(model, crop_frame, device):
         crop_frame = np.expand_dims(crop_frame, axis=0)  # add batch dimension
         crop_frame = torch.from_numpy(crop_frame).float().to(device)
         output = model(crop_frame)
-        output = output * torch.FloatTensor([16] + [5]*8 + [25]).to(device)
+        output = output * torch.FloatTensor([16] + [5]*9 + [25]).to(device)
     return output
 
 def plot_bar(au_scores, title):
-    #labels = ['AU4', 'AU6', 'AU7', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
-    labels = ['Brow\nLowerer', 'Cheek\nRaiser', 'Lid\nTightener', 'Upper Lip\nRaiser', 'Lip Corner\nPuller', 'Lip\nStretcher', 'Lips\nPart', 'Jaw\nDrop', 'Eyes\nClosed']
-    colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive']
+    #labels = ['AU4', 'AU6', 'AU7', 'AU9', 'AU10', 'AU12', 'AU20', 'AU25', 'AU26', 'AU43']
+    labels = ['Brow\nLowerer', 'Cheek\nRaiser', 'Lid\nTightener', 'Nose\nWrinkler', 'Upper Lip\nRaiser', 'Lip Corner\nPuller', 'Lip\nStretcher', 'Lips\nPart', 'Jaw\nDrop', 'Eyes\nClosed']
+    colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'burlywood']
     fig, ax = plt.subplots(figsize=(10, 10.8))
     values = au_scores[1:]
     fig, ax = plt.subplots(figsize=(10, 10.8))
-    ax.barh(labels, values, color=colors)
+
+    #ax.barh(labels, values, color=colors)
+    ordertoshow=[7, 6, 5, 4, 3, 2, 8, 0]
+    ax.barh(np.take(labels, ordertoshow), np.take(values, ordertoshow), color=np.take(colors, ordertoshow))
+
     ax.tick_params(axis='both', labelsize=15)
     ax.set_title(title + ' PSPI {:.2f}/16'.format(au_scores[0]), fontsize=20)
     ax.set_xlim([0, 5])
@@ -99,7 +103,7 @@ def adaptive_canvas(image_left, image_right):
 
 def main():
     # add DL model
-    num_classes = 10
+    num_classes = 11
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     model = VGG_16().to(device)
     set_parameter_requires_grad(model, feature_extracting=False)
@@ -141,11 +145,11 @@ def main():
         faces = face_cascade.detectMultiScale(frame_gray, 1.1, 6) 
         for (x, y, w, h) in faces:
             h = w
+            crop_frame = np.copy(frame_flip)[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
             if args.round == 1:
                 frame_flip = rounded_rectangle(frame_flip, x, y, w, h, 100, 20)
             if args.square == 1: 
-                cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 255, 255), 4)
-            crop_frame = frame_flip[y-2*args.scale:y+h+args.scale, x-args.scale:x+w+args.scale]
+                frame_flip = cv2.rectangle(frame_flip, (x-args.scale, y-2*args.scale), (x+w+args.scale, y+h+args.scale), (255, 255, 255), 4)
         
         # feed the frame into the model
         try: 
@@ -154,12 +158,13 @@ def main():
                 output = output.flatten()
                 output_cpu = torch.Tensor.cpu(output).numpy()
                 output_plot = plot_bar(output_cpu, cap_info)
-                output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item())
+                output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au9 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item(), output[10].item())
 
             # save video option
             if args.record == 'on':
                 filename = save_path + str(save_count) + '.png'
                 cv2.imwrite(filename, crop_frame)
+                np.save(save_path + str(save_count) + '.npy', output_cpu)
                 save_count += 1
             else:
                 pass
@@ -170,7 +175,7 @@ def main():
         
         # print AU info at the bottom of each frame
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
+        font_scale = 0.8
         #thickness = 2
         text_size, _ = cv2.getTextSize(output_text, font, font_scale, 2)
         text_x = int((cap_w - text_size[0]) / 2)
