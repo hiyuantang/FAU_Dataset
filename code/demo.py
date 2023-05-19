@@ -21,7 +21,7 @@ plt.switch_backend('agg')
 # /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth
 
 parser = argparse.ArgumentParser(description='DEMO')
-parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69.pth', type=str, 
+parser.add_argument('--mpath', '-p', default='/Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth', type=str, 
                     help='the path of model')
 parser.add_argument('--scale', '-s', default=80, type=int, 
                     help='determine the face crop size')
@@ -72,7 +72,7 @@ def plot_bar(au_scores, title):
     fig, ax = plt.subplots(figsize=(10, 10.8))
 
     #ax.barh(labels, values, color=colors)
-    ordertoshow=[7, 6, 5, 4, 3, 2, 8, 0]
+    ordertoshow=[7, 6, 5, 4, 3, 2, 8, 0, 1, 9]
     ax.barh(np.take(labels, ordertoshow), np.take(values, ordertoshow), color=np.take(colors, ordertoshow))
 
     ax.tick_params(axis='both', labelsize=15)
@@ -120,7 +120,7 @@ def main():
     cv2.namedWindow('face_cap', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('face_cap', 1500, 600)
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_FFMPEG,(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY ))
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
     cap_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     cap_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
