@@ -18,7 +18,7 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth --seed 10 --mode 0
+# python train.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth --seed 11 --mode 0
 # sampe bash command Mac: 
 # python train.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth --seed 10 --mode 0
 
@@ -59,22 +59,22 @@ def test_model(model, test_dataset, test_loader, device, criterion, batch_size):
     model.eval()
     with torch.no_grad():
         running_loss = 0.0
-        running_pred_label = np.empty((0,20))
+        running_pred_label = np.empty((0,22))
             # Iterate over data.
         for images, labels in test_loader:
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
 
-            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
+            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
             running_loss += loss_batch_mean.item()
 
-            outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
+            outputs = outputs * torch.FloatTensor([16] + [5]*10).to(device)
             running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
         
-        pred_test = running_pred_label[:,0:10]
-        label_test = running_pred_label[:,10:]
+        pred_test = running_pred_label[:,0:11]
+        label_test = running_pred_label[:,11:]
         mses, maes, mses_single_au, maes_single_au, pspi_mse, pspi_mae, pred_avg, pred_avg_diff = epoch_losses(pred_test, label_test)
 
         loss = running_loss / len(test_dataset)
@@ -115,7 +115,7 @@ def main():
     with open(results_path, 'x') as f:
         pass
 
-    num_classes = 10
+    num_classes = 11
     batch_size = args.train_batch_size
     num_epochs = args.epochs
 
@@ -159,7 +159,12 @@ def main():
     if args.resume is None:
         pass
     else:
-        model.load_state_dict(torch.load(args.resume, map_location=device))
+        checkp = torch.load(args.resume, map_location=device)
+        ignored_layer_keys = ['fc8.weight', 'fc8.bias']
+        filtered_dict = {k: v for k, v in checkp.items() if k not in ignored_layer_keys}
+        model_dict = model.state_dict()
+        model_dict.update(filtered_dict)
+        model.load_state_dict(model_dict)
 
     # load data
     if 'FAU' in args.dataset_root:
@@ -220,7 +225,7 @@ def main():
 
         model.train()  # Set model to training mode
         running_loss = 0.0
-        running_pred_label = np.empty((0,20))
+        running_pred_label = np.empty((0,22))
             # Iterate over data.
         for images, labels in train_loader:
             inputs = images.to(device)
@@ -234,18 +239,18 @@ def main():
             # Get model outputs and calculate loss
             outputs = model(inputs)
             #labels/tensor([16.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.]
-            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*9).to(device))
+            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
             loss_batch_mean.backward()
             optimizer.step()
 
             running_loss += loss_batch_mean.item()
 
-            outputs = outputs * torch.FloatTensor([16] + [5]*9).to(device)
+            outputs = outputs * torch.FloatTensor([16] + [5]*10).to(device)
             running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
 
-        pred_train = running_pred_label[:,0:10]
-        label_train = running_pred_label[:,10:]
+        pred_train = running_pred_label[:,0:11]
+        label_train = running_pred_label[:,11:]
 
         train_mses, train_maes, train_mses_single_au, train_maes_single_au, train_pspi_mse, train_pspi_mae, train_pred_avg, train_pred_avg_diff = epoch_losses(pred_train, label_train)
 
