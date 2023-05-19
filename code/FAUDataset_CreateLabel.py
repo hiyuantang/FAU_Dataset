@@ -83,7 +83,7 @@ for i in next(os.walk(image_dir))[1]:
                 else:
                     label_file_name = image_name+'.txt'
 
-            content.pop('au9')
+            #content.pop('au9')
             json_object = json.dumps(content)
 
             target_label_path = os.path.join(updated_label_dir_final, label_file_name)
