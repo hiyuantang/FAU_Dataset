@@ -120,7 +120,8 @@ def main():
     cv2.namedWindow('face_cap', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('face_cap', 1500, 600)
 
-    cap = cv2.VideoCapture(0, cv2.CAP_FFMPEG,(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY ))
+    cap = cv2.VideoCapture(0)
+    
     cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
     cap_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     cap_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
