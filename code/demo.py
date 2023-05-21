@@ -160,7 +160,6 @@ def main():
                 output = output.flatten()
                 output_cpu = torch.Tensor.cpu(output).numpy()
                 output_plot = plot_bar(output_cpu, cap_info)
-                plt.close()
                 output_text = '|PSPI {:.2f} |au4 {:.2f} |au6 {:.2f} |au7 {:.2f} |au9 {:.2f} |au10 {:.2f} |au12 {:.2f} |au20 {:.2f} |au25 {:.2f} |au26 {:.2f} |au43 {:.2f}|'.format(output[0].item(), output[1].item(), output[2].item(), output[3].item(), output[4].item(), output[5].item(), output[6].item(), output[7].item(), output[8].item(), output[9].item(), output[10].item())
 
             # save video option
@@ -187,6 +186,7 @@ def main():
 
         # dispay canvas
         canvas = adaptive_canvas(frame_flip, output_plot)
+        plt.close()
         cv2.imshow('face_cap', canvas)
 
         # Press 'Q' to quit camera
