@@ -94,6 +94,7 @@ class VGG_16(nn.Module):
         x = F.relu(self.fc7(x))
         x = self.dropout7(x)
         return self.fc8(x)
+
     
     def forward_thoughts(self, x, cut):
         x_0 = F.relu(self.conv_1_1(x))
