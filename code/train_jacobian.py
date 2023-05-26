@@ -19,9 +19,9 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth --seed 12 --mode 0
+# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 12 --mode 0
 # sampe bash command Mac: 
-# python train_jacobian.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 12 --mode 0
+# python train_jacobian.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 13 --mode 0
 
 parser = argparse.ArgumentParser(description='FAU Dataset Training & Testing')
 parser.add_argument('--seed', default=16, type=int, help='seed for initializing training. ')
@@ -30,9 +30,9 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5'], type=list, 
+parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--test_set', default=['ew1'], type=list, 
+parser.add_argument('--test_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
                     help='take in a list of skin color scale')
 #parser.add_argument('--train_set', default=['aw'], type=list, 
 #                    help='take in a list of skin color scale')
@@ -56,7 +56,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 def comma_array(tensor_array):
     return (', '.join(str(x) for x in tensor_array))
 
-def test_model(model, test_dataset, test_loader, device, criterion, batch_size):
+def test_model(model, readout, test_dataset, test_loader, device, criterion, batch_size):
     model.eval()
     with torch.no_grad():
         running_loss = 0.0
@@ -66,6 +66,7 @@ def test_model(model, test_dataset, test_loader, device, criterion, batch_size):
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
+            outputs = readout(outputs)
 
             loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
@@ -95,11 +96,6 @@ def epoch_losses(predictions, labels):
     pspi_mse = mses[0]
     pspi_mae = maes[0]
     return mses, maes, mses_single_au, maes_single_au, pspi_mse, pspi_mae, pred_avg, pred_avg_diff
-
-def get_jacobian(net, x):
-    y = net(x)
-    grad_params = torch.autograd.grad(y.sum(), x, create_graph=True)
-    return grad_params[0]
 
 def main():
     if args.seed is not None:
@@ -246,6 +242,7 @@ def main():
 
         readout.train() # Set model to training mode
         running_loss = 0.0
+        running_jacobian_loss = 0.0
         running_pred_label = np.empty((0,22))
             # Iterate over data.
         for images, labels in train_loader:
@@ -264,15 +261,15 @@ def main():
             loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
 
-            grad_params = get_jacobian(readout, outputs_0)
-            #grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
-            jacobian_loss_batch_mean = torch.norm(grad_params) ** 2
+            grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
+            jacobian_loss_batch_mean = torch.norm(grad_params[0]) ** 2 / 32
             total_loss = loss_batch_mean + 1e-1 * jacobian_loss_batch_mean
 
             total_loss.backward()
             optimizer.step()
 
             running_loss += total_loss.item()
+            running_jacobian_loss += jacobian_loss_batch_mean.item()
 
             outputs_1 = outputs_1 * torch.FloatTensor([16] + [5]*10).to(device)
             running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs_1.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
@@ -283,16 +280,18 @@ def main():
         train_mses, train_maes, train_mses_single_au, train_maes_single_au, train_pspi_mse, train_pspi_mae, train_pred_avg, train_pred_avg_diff = epoch_losses(pred_train, label_train)
 
         epoch_loss = running_loss / len(train_dataset)
-        print('{} loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, train_pspi_mse, train_pspi_mae))
+        epoch_jacobian_loss = running_jacobian_loss / len(train_dataset)
+        print('{} loss: {:.4f} Jacobian loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, epoch_jacobian_loss, train_pspi_mse, train_pspi_mae))
 
         # add test result
-        test_loss, test_mses, test_maes, test_mses_single_au, test_maes_single_au, test_pred_avg, test_pred_avg_diff = test_model(model, test_dataset, test_loader, device, criterion, batch_size)
+        test_loss, test_mses, test_maes, test_mses_single_au, test_maes_single_au, test_pred_avg, test_pred_avg_diff = test_model(model, readout, test_dataset, test_loader, device, criterion, batch_size)
 
         with open(results_path, 'a') as f:
             if epoch == 0:
                 f.write('Train Sets: ' + str(args.train_set) + ' | Test Sets: ' + str(args.test_set)+'\n')
                 f.write('Mode: ' + str(args.mode)+'\n')
             f.write('train_loss at epoch'+str(epoch)+': '+str(epoch_loss)+'\n')
+            f.write('jacobian_loss at epoch'+str(epoch)+': '+str(epoch_jacobian_loss)+'\n')
             f.write('train_mses at epoch'+str(epoch)+': '+comma_array(train_mses)+'\n')
             f.write('train_maes at epoch'+str(epoch)+': '+comma_array(train_maes)+'\n')
             f.write('train_mses_single at epoch'+str(epoch)+': '+comma_array(train_mses_single_au)+'\n')
