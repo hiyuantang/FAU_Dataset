@@ -20,13 +20,3 @@ class Readout(nn.Module):
         x = F.relu(self.fc7(x))
         x = self.dropout7(x)
         return self.fc8(x)
-
-def get_model():
-    model = Readout()
-    return model, optim.Adam(model.parameters(), lr=1e-3)
-
-def get_jacobian(net, x, noutputs):
-    x.requires_grad = True
-    y = net(x)
-    grad_params = torch.autograd.grad(y, x, create_graph=True)
-    return grad_params[0]
