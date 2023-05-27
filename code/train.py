@@ -29,9 +29,9 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','em6','em7','em8','em9','em10','ew1','ew2','ew3','ew4','ew5','ew6','ew7','ew8','ew9','ew10'], type=list, 
+parser.add_argument('--train_set', default=['em6','em7','em8','em9','em10'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--test_set', default=['ew1'], type=list, 
+parser.add_argument('--test_set', default=['ew1','ew2','ew3','ew4','ew5','ew6','ew7','ew8','ew9','ew10'], type=list, 
                     help='take in a list of skin color scale')
 #parser.add_argument('--train_set', default=['aw'], type=list, 
 #                    help='take in a list of skin color scale')
