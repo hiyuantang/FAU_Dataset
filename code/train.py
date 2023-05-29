@@ -18,7 +18,7 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth --seed 11 --mode 0
+# python train.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/checkpoint_epoch_init.pth --seed 24 --mode 0
 # sampe bash command Mac: 
 # python train.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/checkpoint_epoch_init.pth --seed 10 --mode 0
 
@@ -29,7 +29,7 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em6','em7','em8','em9','em10'], type=list, 
+parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','em6','em7','em8','em9','em10'], type=list, 
                     help='take in a list of skin color scale')
 parser.add_argument('--test_set', default=['ew1','ew2','ew3','ew4','ew5','ew6','ew7','ew8','ew9','ew10'], type=list, 
                     help='take in a list of skin color scale')
