@@ -19,7 +19,7 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:\GitHub\FAU_Dataset\code\models_r30\checkpoint_epoch69.pth --seed 30 --mode 0
+# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:\GitHub\FAU_Dataset\code\models_r32\checkpoint_epoch69.pth --seed 33 --mode 0
 # sampe bash command Mac: 
 # python train_jacobian.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 13 --mode 0
 
@@ -30,9 +30,9 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
+parser.add_argument('--train_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--test_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
+parser.add_argument('--test_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
                     help='take in a list of skin color scale')
 #parser.add_argument('--train_set', default=['aw'], type=list, 
 #                    help='take in a list of skin color scale')
