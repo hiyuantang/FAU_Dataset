@@ -19,7 +19,7 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 12 --mode 0
+# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:\GitHub\FAU_Dataset\code\models_r30\checkpoint_epoch69.pth --seed 30 --mode 0
 # sampe bash command Mac: 
 # python train_jacobian.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 13 --mode 0
 
@@ -58,30 +58,41 @@ def comma_array(tensor_array):
 
 def test_model(model, readout, test_dataset, test_loader, device, criterion, batch_size):
     model.eval()
-    with torch.no_grad():
-        running_loss = 0.0
-        running_pred_label = np.empty((0,22))
-            # Iterate over data.
-        for images, labels in test_loader:
-            inputs = images.to(device)
-            labels = labels.to(device)
-            outputs = model(inputs)
-            outputs = readout(outputs)
+    readout.train()
+    optimizer = optim.Adam(readout.parameters(),lr=0.0)
+    running_loss = 0.0
+    running_jacobian_loss = 0.0
+    running_pred_label = np.empty((0,22))
+        # Iterate over data.
+    for images, labels in test_loader:
+        inputs = images.to(device)
+        labels = labels.to(device)
+        optimizer.zero_grad()
 
-            loss_batch = criterion(outputs, labels/torch.FloatTensor([16] + [5]*10).to(device))
-            loss_batch_mean = loss_batch.mean() * batch_size
-            running_loss += loss_batch_mean.item()
-
-            outputs = outputs * torch.FloatTensor([16] + [5]*10).to(device)
-            running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
+        outputs_0 = model(inputs)
+        outputs_1 = readout(outputs_0)
         
-        pred_test = running_pred_label[:,0:11]
-        label_test = running_pred_label[:,11:]
-        mses, maes, mses_single_au, maes_single_au, pspi_mse, pspi_mae, pred_avg, pred_avg_diff = epoch_losses(pred_test, label_test)
+        grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
+        jacobian_loss_batch_mean = torch.norm(grad_params[0]) ** 2 / 32
 
-        loss = running_loss / len(test_dataset)
-        print('{} loss: {:.4f} TEST PSPI MSE: {:.4f} TEST PSPI MAE: {:.4f}'.format('test', loss, pspi_mse, pspi_mae)+ '\n')
-    return loss, mses, maes, mses_single_au, maes_single_au, pred_avg, pred_avg_diff
+        loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
+        loss_batch_mean = loss_batch.mean() * batch_size
+
+        total_loss = loss_batch_mean + 1e-1 * jacobian_loss_batch_mean
+        running_loss += total_loss.item()
+        running_jacobian_loss += jacobian_loss_batch_mean.item()
+
+        outputs_1 = outputs_1 * torch.FloatTensor([16] + [5]*10).to(device)
+        running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs_1.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
+    
+    pred_test = running_pred_label[:,0:11]
+    label_test = running_pred_label[:,11:]
+    mses, maes, mses_single_au, maes_single_au, pspi_mse, pspi_mae, pred_avg, pred_avg_diff = epoch_losses(pred_test, label_test)
+
+    loss = running_loss / len(test_dataset)
+    jacobian_loss = running_jacobian_loss/ len(test_dataset)
+    print('{} loss: {:.4f} Jaco_loss: {:.4f}'.format('test', loss, jacobian_loss)+ '\n')
+    return loss, jacobian_loss, mses, maes, mses_single_au, maes_single_au, pred_avg, pred_avg_diff
 
 def epoch_losses(predictions, labels):
     mses = ((predictions - labels)**2).mean(axis=0)
@@ -281,10 +292,10 @@ def main():
 
         epoch_loss = running_loss / len(train_dataset)
         epoch_jacobian_loss = running_jacobian_loss / len(train_dataset)
-        print('{} loss: {:.4f} Jacobian loss: {:.4f} PSPI MSE: {:.4f} PSPI MAE: {:.4f}'.format('train', epoch_loss, epoch_jacobian_loss, train_pspi_mse, train_pspi_mae))
+        print('{} loss: {:.4f} Jacobian loss: {:.4f}'.format('train', epoch_loss, epoch_jacobian_loss))
 
         # add test result
-        test_loss, test_mses, test_maes, test_mses_single_au, test_maes_single_au, test_pred_avg, test_pred_avg_diff = test_model(model, readout, test_dataset, test_loader, device, criterion, batch_size)
+        test_loss, test_jacobian_loss, test_mses, test_maes, test_mses_single_au, test_maes_single_au, test_pred_avg, test_pred_avg_diff = test_model(model, readout, test_dataset, test_loader, device, criterion, batch_size)
 
         with open(results_path, 'a') as f:
             if epoch == 0:
@@ -300,6 +311,7 @@ def main():
             f.write('train_pred_single_avg_diff at epoch'+str(epoch)+': '+comma_array(train_pred_avg_diff)+'\n')
             f.write('\n')
             f.write('test_loss at epoch'+str(epoch)+': '+str(test_loss)+'\n')
+            f.write('test_jaco_loss at epoch'+str(epoch)+': '+str(test_jacobian_loss)+'\n')
             f.write('test_mses at epoch'+str(epoch)+': '+comma_array(test_mses)+'\n')
             f.write('test_maes at epoch'+str(epoch)+': '+comma_array(test_maes)+'\n')
             f.write('test_mses_single at epoch'+str(epoch)+': '+comma_array(test_mses_single_au)+'\n')
