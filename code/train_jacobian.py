@@ -19,7 +19,7 @@ from FAUDataset import *
 plt.switch_backend('agg')
 
 # sampe bash command Windows: 
-# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:\GitHub\FAU_Dataset\code\models_r32\checkpoint_epoch69.pth --seed 33 --mode 0
+# python train_jacobian.py --dataset_root D:/Datasets/FAU --resume D:\GitHub\FAU_Dataset\code\models_r30\checkpoint_epoch69_r30.pth --seed 31 --mode 0
 # sampe bash command Mac: 
 # python train_jacobian.py --dataset_root /Volumes/Yuan-T7/Datasets/FAU --resume /Volumes/Yuan-T7/FAU_models/models_r11/checkpoint_epoch69_11.pth --seed 13 --mode 0
 
@@ -30,9 +30,9 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
+parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--test_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
+parser.add_argument('--test_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
                     help='take in a list of skin color scale')
 #parser.add_argument('--train_set', default=['aw'], type=list, 
 #                    help='take in a list of skin color scale')
@@ -67,13 +67,14 @@ def test_model(model, readout, test_dataset, test_loader, device, criterion, bat
     for images, labels in test_loader:
         inputs = images.to(device)
         labels = labels.to(device)
+        
         optimizer.zero_grad()
 
         outputs_0 = model(inputs)
         outputs_1 = readout(outputs_0)
         
         grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
-        jacobian_loss_batch_mean = torch.norm(grad_params[0]) ** 2 / 32
+        jacobian_loss_batch_mean = (torch.norm(grad_params[0]) ** 2)
 
         loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
         loss_batch_mean = loss_batch.mean() * batch_size
@@ -84,6 +85,8 @@ def test_model(model, readout, test_dataset, test_loader, device, criterion, bat
 
         outputs_1 = outputs_1 * torch.FloatTensor([16] + [5]*10).to(device)
         running_pred_label = np.concatenate((running_pred_label, np.concatenate([outputs_1.data.cpu().numpy(), labels.data.cpu().numpy()],axis=1)))
+
+        optimizer.zero_grad()
     
     pred_test = running_pred_label[:,0:11]
     label_test = running_pred_label[:,11:]
@@ -268,12 +271,12 @@ def main():
             # Get model outputs and calculate loss
             outputs_0 = model(inputs)
             outputs_1 = readout(outputs_0)
+
+            grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
             #labels/tensor([16.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.,  5.]
             loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
-
-            grad_params = torch.autograd.grad(outputs_1.sum(), outputs_0, create_graph=True)
-            jacobian_loss_batch_mean = torch.norm(grad_params[0]) ** 2 / 32
+            jacobian_loss_batch_mean = (torch.norm(grad_params[0]) ** 2)
             total_loss = loss_batch_mean + 1e-1 * jacobian_loss_batch_mean
 
             total_loss.backward()
@@ -323,7 +326,7 @@ def main():
             f.write('\n')
         
         if (epoch+1) % args.save_interval == 0:
-            torch.save(model.state_dict(), os.path.join('./models_r' + str(args.seed), 'checkpoint_epoch'+str(epoch)+'.pth'))
+            torch.save(readout.state_dict(), os.path.join('./models_r' + str(args.seed), 'checkpoint_epoch'+str(epoch)+'.pth'))
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
