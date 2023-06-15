@@ -44,6 +44,10 @@ parser.add_argument('--save_interval', default=70, type=int,
                     help='define the interval of epochs to save model state')
 parser.add_argument('--mode', default=0, type=int, 
                     help='define the data pre-transformation mode: mode 0 is non-transformed')
+parser.add_argument('--jaco', default=0.1, type=int, 
+                    help='define the scale of jacobian loss')
+parser.add_argument('--custom', default=0.1, type=int, 
+                    help='define a customized infomation recorded in textual result file')
 args = parser.parse_args()
 
 print("PyTorch Version: ",torch.__version__)
@@ -79,7 +83,7 @@ def test_model(model, readout, test_dataset, test_loader, device, criterion, bat
         loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
         loss_batch_mean = loss_batch.mean() * batch_size
 
-        total_loss = loss_batch_mean + 1e-1 * jacobian_loss_batch_mean
+        total_loss = loss_batch_mean + args.jaco * jacobian_loss_batch_mean
         running_loss += total_loss.item()
         running_jacobian_loss += jacobian_loss_batch_mean.item()
 
@@ -277,7 +281,7 @@ def main():
             loss_batch = criterion(outputs_1, labels/torch.FloatTensor([16] + [5]*10).to(device))
             loss_batch_mean = loss_batch.mean() * batch_size
             jacobian_loss_batch_mean = (torch.norm(grad_params[0]) ** 2)
-            total_loss = loss_batch_mean + 1e-1 * jacobian_loss_batch_mean
+            total_loss = loss_batch_mean + args.jaco * jacobian_loss_batch_mean
 
             total_loss.backward()
             optimizer.step()
@@ -303,7 +307,10 @@ def main():
         with open(results_path, 'a') as f:
             if epoch == 0:
                 f.write('Train Sets: ' + str(args.train_set) + ' | Test Sets: ' + str(args.test_set)+'\n')
+                f.write('Resume: ' + str(args.resume)+'\n')
                 f.write('Mode: ' + str(args.mode)+'\n')
+                f.write('Jaco: ' + str(args.jaco)+'\n')
+                f.write('seed: ' + str(args.seed)+'\n')
             f.write('train_loss at epoch'+str(epoch)+': '+str(epoch_loss)+'\n')
             f.write('jacobian_loss at epoch'+str(epoch)+': '+str(epoch_jacobian_loss)+'\n')
             f.write('train_mses at epoch'+str(epoch)+': '+comma_array(train_mses)+'\n')
