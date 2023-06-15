@@ -46,7 +46,7 @@ parser.add_argument('--mode', default=0, type=int,
                     help='define the data pre-transformation mode: mode 0 is non-transformed')
 parser.add_argument('--jaco', default=0.1, type=int, 
                     help='define the scale of jacobian loss')
-parser.add_argument('--custom', default=0.1, type=int, 
+parser.add_argument('--custominfo', default='', type=str, 
                     help='define a customized infomation recorded in textual result file')
 args = parser.parse_args()
 
@@ -310,7 +310,8 @@ def main():
                 f.write('Resume: ' + str(args.resume)+'\n')
                 f.write('Mode: ' + str(args.mode)+'\n')
                 f.write('Jaco: ' + str(args.jaco)+'\n')
-                f.write('seed: ' + str(args.seed)+'\n')
+                f.write('Seed: ' + str(args.seed)+'\n')
+                f.write('Info: ' + str(args.custominfo)+'\n')
             f.write('train_loss at epoch'+str(epoch)+': '+str(epoch_loss)+'\n')
             f.write('jacobian_loss at epoch'+str(epoch)+': '+str(epoch_jacobian_loss)+'\n')
             f.write('train_mses at epoch'+str(epoch)+': '+comma_array(train_mses)+'\n')
