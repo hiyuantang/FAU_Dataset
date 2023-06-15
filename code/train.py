@@ -263,7 +263,9 @@ def main():
         with open(results_path, 'a') as f:
             if epoch == 0:
                 f.write('Train Sets: ' + str(args.train_set) + ' | Test Sets: ' + str(args.test_set)+'\n')
+                f.write('Resume: ' + str(args.resume)+'\n')
                 f.write('Mode: ' + str(args.mode)+'\n')
+                f.write('seed: ' + str(args.seed)+'\n')
             f.write('train_loss at epoch'+str(epoch)+': '+str(epoch_loss)+'\n')
             f.write('train_mses at epoch'+str(epoch)+': '+comma_array(train_mses)+'\n')
             f.write('train_maes at epoch'+str(epoch)+': '+comma_array(train_maes)+'\n')
