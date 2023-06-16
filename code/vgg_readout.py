@@ -15,8 +15,8 @@ class Readout(nn.Module):
         
     def forward(self, x):
         x = x.view(x.size(0), -1)
-        x = F.relu(self.fc6(x))
+        x = F.sigmoid(self.fc6(x))
         x = self.dropout6(x)
-        x = F.relu(self.fc7(x))
+        x = F.sigmoid(self.fc7(x))
         x = self.dropout7(x)
         return self.fc8(x)
