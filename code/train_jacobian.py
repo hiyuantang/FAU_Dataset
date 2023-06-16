@@ -30,9 +30,9 @@ parser.add_argument('--train_batch_size', default=32, type=int,
                         help="batch size for training")
 parser.add_argument('--resume', '-r', default=None, type=str, 
                     help='transfer training by defining the path of stored weights')
-parser.add_argument('--train_set', default=['em1','em2','em3','em4','em5','ew1','ew2','ew3','ew4','ew5'], type=list, 
+parser.add_argument('--train_set', default=['em1', 'em2', 'em3', 'em4', 'em5', 'ew1', 'ew2', 'ew3', 'ew4', 'ew5'], type=list, 
                     help='take in a list of skin color scale')
-parser.add_argument('--test_set', default=['em6','em7','em8','em9','em10','ew6','ew7','ew8','ew9','ew10'], type=list, 
+parser.add_argument('--test_set', default=['em6', 'em7', 'em8', 'em9', 'em10', 'ew6', 'ew7', 'ew8', 'ew9', 'ew10'], type=list, 
                     help='take in a list of skin color scale')
 #parser.add_argument('--train_set', default=['aw'], type=list, 
 #                    help='take in a list of skin color scale')
@@ -44,7 +44,7 @@ parser.add_argument('--save_interval', default=70, type=int,
                     help='define the interval of epochs to save model state')
 parser.add_argument('--mode', default=0, type=int, 
                     help='define the data pre-transformation mode: mode 0 is non-transformed')
-parser.add_argument('--jaco', default=0.1, type=int, 
+parser.add_argument('--jaco', default=0.1, type=float, 
                     help='define the scale of jacobian loss')
 parser.add_argument('--custominfo', default='', type=str, 
                     help='define a customized infomation recorded in textual result file')
@@ -306,8 +306,11 @@ def main():
 
         with open(results_path, 'a') as f:
             if epoch == 0:
-                f.write('Train Sets: ' + str(args.train_set) + ' | Test Sets: ' + str(args.test_set)+'\n')
+                f.write('Train Sets: ' + str(args.train_set)+'\n')
+                f.write('Test Sets: ' + str(args.test_set)+'\n')
                 f.write('Resume: ' + str(args.resume)+'\n')
+                f.write('Epochs: ' + str(args.epochs)+'\n')
+                f.write('Batch_size: ' + str(args.train_batch_size)+'\n')
                 f.write('Mode: ' + str(args.mode)+'\n')
                 f.write('Jaco: ' + str(args.jaco)+'\n')
                 f.write('Seed: ' + str(args.seed)+'\n')
