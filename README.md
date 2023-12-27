@@ -4,12 +4,16 @@
 
 ![Screenshot_20221220_095402](https://user-images.githubusercontent.com/24949723/208733705-827a0670-f3d7-4d31-9a87-f66cb483a4e4.png) 
 
-**A Sample Image:** (An European Male of Skin Color Scale 4 with AU10 Activated at its Maximum) <br>
+## A Sample Image 
+- **An European Male of Skin Color Scale 4 with AU10 Activated at its Maximum**:
 ![Screenshot_20221220_095745](https://user-images.githubusercontent.com/24949723/208734519-b632191e-9ba3-4a45-86eb-3e4674c35cd7.png)
 
-**Softwares and Websites Used:** Character Creator 4 (CC4), Power Automate, https://skintone.google/ <br>
+## Softwares and Websites Used
+- Character Creator 4 (CC4)
+- Power Automate
+- https://skintone.google/ 
 
-**Skin Color Scale from Google:** <br>
+## Skin Color Scale from Google
 ![Screenshot_20221223_062225](https://user-images.githubusercontent.com/24949723/209418054-f2680cc0-6e95-4f88-a862-0ce58d3f394c.png)
 
 ## Composition
